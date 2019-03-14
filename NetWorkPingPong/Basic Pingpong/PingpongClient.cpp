@@ -22,18 +22,24 @@
 
 #define EPOLL_SIZE        20
 
-int main(int argc, char **argv)
+int main()
 {
+	const int port = 80;
+
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	
+
 	SA addr;
 
 	addr.sin_family = AF_INET;
-	addr.sin_port = 6000;
-	addr.sin_addr* = INADDR_ANY;
+	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	if(connect(sock, (struct sockaddr*)&addr, sizeof(SA)) == -1){
-		fprintf(addr, "cannot connect\n");
+	if (connect(sock, (struct sockaddr*)&addr, sizeof(SA)) == -1) {
+		printf("sock = %d\n", sock);
+		printf("sockarr = %d\n", addr.sin_addr.s_addr);
+		printf("sock = %d\n", addr.sin_port);
+		printf("cannot connect\n");
 		return(-1);
-	}else printf("connected\n");
+	}
+	else printf("connected\n");
 }

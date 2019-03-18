@@ -32,6 +32,9 @@ int main()
 	SA addr, clientAddr;
 	socklen_t len = sizeof(clientAddr);
 
+	char buffer[2048];
+	int recv_len;
+
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -47,12 +50,19 @@ int main()
 	else printf("connected\n");
 
 	if (listen(sock, 5) == -1) {
-		printf("listen fail");
+		printf("listen fail\n");
 	}
 
 	while (1) {
 		conn = accept(sock, (struct sockaddr*)&clientAddr, &len);
-		printf("is conn?");
+
+		if (recv_len = recv(sock, buffer, 256, 0) == -1) {
+			printf("server wait\n");
+		}
+		if (send(sock, buffer, 256, 0) == -1) {
+			printf("send fail\n");
+		}
+
 		close(conn);
 	}
 }

@@ -30,6 +30,9 @@ int main()
 
 	SA addr;
 
+	char buffer[2048];
+	int recv_len;
+
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -42,4 +45,18 @@ int main()
 		return(-1);
 	}
 	else printf("connected\n");
+
+	for (int i = 0; i < 50; i++) {
+		for (int j = 0; j < 5; j++, i++)
+			buffer[i] = 'a' + j;
+	}
+
+	if (send(sock, buffer, 256, 0) == -1) {
+		printf("send fail\n");
+	}
+	if (recv_len = recv(sock, buffer, 256, 0) == -1) {
+		printf("client wait\n");
+	}
+
+	printf("%s\n", buffer);
 }

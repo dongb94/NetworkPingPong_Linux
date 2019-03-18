@@ -18,6 +18,8 @@
 
 #include <sys/ioctl.h>
 
+#include <errno.h>
+
 #define SA  struct sockaddr_in
 
 #define EPOLL_SIZE        20
@@ -33,6 +35,7 @@ int main()
 	socklen_t len = sizeof(clientAddr);
 
 	char buffer[2048];
+	int send_len;
 	int recv_len;
 
 	addr.sin_family = AF_INET;
@@ -56,11 +59,24 @@ int main()
 	while (1) {
 		conn = accept(sock, (struct sockaddr*)&clientAddr, &len);
 
-		if (recv_len = recv(sock, buffer, 256, 0) == -1) {
-			printf("server wait\n");
+		while (recv_len = recv(conn, buffer, 256, 0) == -1) {
+			if (errno == EINTR) {
+				continue;
+			}
+			else {
+				fprintf(stderr, "Recv Error : %s\n", strerror(errno));
+				return -1;
+			}
 		}
-		if (send(sock, buffer, 256, 0) == -1) {
-			printf("send fail\n");
+
+		while (send_len = send(conn, buffer, 256, 0) == -1) {
+			if (errno == EINTR) {
+				continue;
+			}
+			else {
+				fprintf(stderr, "Send Error : %s\n", strerror(errno));
+				return -1;
+			}
 		}
 
 		close(conn);

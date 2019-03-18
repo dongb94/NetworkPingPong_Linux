@@ -18,6 +18,8 @@
 
 #include <sys/ioctl.h>
 
+#include <errno.h>
+
 #define SA  struct sockaddr_in
 
 #define EPOLL_SIZE        20
@@ -32,6 +34,7 @@ int main()
 
 	char buffer[2048];
 	int recv_len;
+	int send_len;
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
@@ -46,16 +49,30 @@ int main()
 	}
 	else printf("connected\n");
 
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 50;) {
 		for (int j = 0; j < 5; j++, i++)
 			buffer[i] = 'a' + j;
 	}
+	printf("%s\n", buffer);
 
-	if (send(sock, buffer, 256, 0) == -1) {
-		printf("send fail\n");
+	while (send_len = send(sock, buffer, 256, 0) == -1) {
+		if (errno == EINTR) {
+			continue;
+		}
+		else {
+			fprintf(stderr, "Send Error : %s\n", strerror(errno));
+			return -1;
+		}
 	}
-	if (recv_len = recv(sock, buffer, 256, 0) == -1) {
-		printf("client wait\n");
+
+	while (recv_len = recv(sock, buffer, 256, 0) == -1) {
+		if (errno == EINTR) {
+			continue;
+		}
+		else {
+			fprintf(stderr, "Recv Error : %s\n", strerror(errno));
+			return -1;
+		}
 	}
 
 	printf("%s\n", buffer);

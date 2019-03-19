@@ -1,22 +1,22 @@
 #include <stdio.h>
 
-#include <stdlib.h>
+//#include <stdlib.h>
 
 #include <unistd.h>
 
 #include <string.h>
 
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 #include <sys/socket.h>
 
 #include <netinet/in.h>
 
-#include <fcntl.h>
+//#include <fcntl.h>
 
-#include <sys/ioctl.h>
+//#include <sys/ioctl.h>
 
 #include <errno.h>
 
@@ -46,7 +46,7 @@ int main()
 		printf("sock = %d\n", sock);
 		printf("sockarr = %d\n", addr.sin_addr.s_addr);
 		printf("sock = %d\n", addr.sin_port);
-		printf("cannot connect\n");
+		fprintf(stderr, "Bind Error : %s\n", strerror(errno));
 		close(sock);
 		return(-1);
 	}

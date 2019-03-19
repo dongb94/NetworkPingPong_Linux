@@ -1,19 +1,21 @@
 #include <iostream>
 #include <WinSock2.h>
 
+#pragma comment(lib, "ws2_32.lib")
+
 int main() {
 	SOCKET ConnectSocket = INVALID_SOCKET;
 	struct addrinfo *ptr = NULL;
-	struct sockaddr_in *addr;
+	struct sockaddr_in addr;
 
-	addr->sin_family = AF_INET;
-	addr->sin_port = htons(80);
-	addr->sin_addr.S_un.S_addr = htonl(2211442165);
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(80);
+	addr.sin_addr.S_un.S_addr = inet_addr("221.144.2.165");
 
 	char sendBuffer[] = "Test Message";
 	char recvbuf[256];
 
-	connect(ConnectSocket, (sockaddr*)addr, sizeof(sockaddr_in));
+	connect(ConnectSocket, (sockaddr*)&addr, sizeof(sockaddr_in));
 
 	printf("%s\n", sendBuffer);
 
@@ -27,7 +29,7 @@ int main() {
 		}
 	}
 
-	while (recv(ConnectSocket, sendBuffer, 256, 0) == -1) {
+	while (recv(ConnectSocket, recvbuf, 256, 0) == -1) {
 		if (errno == EINTR) {
 			continue;
 		}
@@ -37,5 +39,5 @@ int main() {
 		}
 	}
 
-	printf("%s\n", sendBuffer);
+	printf("%s\n", recvbuf);
 }

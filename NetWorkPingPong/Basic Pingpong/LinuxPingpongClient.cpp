@@ -1,22 +1,22 @@
 #include <stdio.h>
 
-#include <stdlib.h>
+//#include <stdlib.h>
 
 #include <unistd.h>
 
 #include <string.h>
 
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 
 #include <sys/socket.h>
 
 #include <netinet/in.h>
 
-#include <fcntl.h>
+//#include <fcntl.h>
 
-#include <sys/ioctl.h>
+//#include <sys/ioctl.h>
 
 #include <errno.h>
 
@@ -38,13 +38,13 @@ int main()
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_addr.s_addr = inet_addr("221.144.2.165");
 
 	if (connect(sock, (struct sockaddr*)&addr, sizeof(SA)) == -1) {
 		printf("sock = %d\n", sock);
 		printf("sockarr = %d\n", addr.sin_addr.s_addr);
 		printf("sock = %d\n", addr.sin_port);
-		printf("cannot connect\n");
+		fprintf(stderr, "Connect Error : %s\n", strerror(errno));
 		return(-1);
 	}
 	else printf("connected\n");

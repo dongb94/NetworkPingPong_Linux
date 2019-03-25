@@ -60,14 +60,22 @@ int main()
 	}
 	else printf("listen\n");
 
-	if (fd_epoll = epoll_create(EPOLL_SIZE) <= 0) {
+	if ((fd_epoll = epoll_create(EPOLL_SIZE)) <= 0) {
 		printf("epoll create err\n");
 	}
 	else printf("epoll create\n");
-	memset(&ev, 0, sizeof ev);
-	ev.events = EPOLLIN | EPOLLERR;
+
+	//memset(&ev, 0, sizeof ev);
+	ev.events = EPOLLIN;
 	ev.data.fd = sock;
-	epoll_ctl(fd_epoll, EPOLL_CTL_ADD, sock, &ev);
+	if (epoll_ctl(fd_epoll, EPOLL_CTL_ADD, sock, &ev) == -1) {
+		fprintf(stderr, "epoll ctl Error : %s\n", strerror(errno));
+		printf("epfd : %d\n", fd_epoll);
+		printf("op : %d\n", EPOLL_CTL_ADD);
+		printf("fd : %d\n", sock);
+		return -1;
+	}
+
 	/*
 		for(int i = 0; i<EPOLL_SIZE; i++){
 			struct epoll_event cev;
@@ -92,7 +100,7 @@ int main()
 					fprintf(stderr, "Accept Error : %s\n", strerror(errno));
 					continue;
 				}
-				memset(&ev, 0, sizeof ev);
+				//memset(&ev, 0, sizeof ev);
 				ev.events = EPOLLIN | EPOLLERR;
 				ev.data.fd = client;
 				epoll_ctl(fd_epoll, EPOLL_CTL_ADD, client, &ev);

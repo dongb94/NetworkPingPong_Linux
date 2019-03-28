@@ -6,10 +6,12 @@ using UnityEngine;
 
 public class UnityClient : MonoBehaviour
 {
-
+    private const string IP_ADDR = "221.144.2.165";
+    private const int PORT = 80;
+    
     public void ConnectServer()
     {
-        TcpClient tc = new TcpClient("221.144.2.165", 80);
+        TcpClient tc = new TcpClient(IP_ADDR, PORT);
         string msg = "Hellow C#";
         byte[] buff = Encoding.ASCII.GetBytes(msg);
 

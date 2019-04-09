@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
 
-public class UnityClient : MonoBehaviour
+public class UnityLinuxPingpongClient : MonoBehaviour
 {
     private const string IP_ADDR = "221.144.2.165";
     private const int PORT = 80;

@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class NodeJsTCPPingpong : MonoBehaviour
@@ -23,18 +24,25 @@ public class NodeJsTCPPingpong : MonoBehaviour
 
     private int recvSize;
 
+    public string msg;
+    public int recvCount;
+
+    private ClientTestBox _testBox;
+
     public void Awake()
     {
         _rcvBuffer = new byte[MAX_BUFFER_SIZE];
         _sendBuffer = new byte[MAX_BUFFER_SIZE];
 
-        var sendMsg = "echo message";
+        var sendMsg = "echo : ";
         _sendBuffer = Encoding.UTF8.GetBytes(sendMsg);
 
-        Connect();
+        recvCount = 0;
+
+        _testBox = GetComponent<ClientTestBox>();
     }
 
-    public Socket Connect()
+    public async Task<Socket> Connect()
     {
         try
         {
@@ -42,45 +50,50 @@ public class NodeJsTCPPingpong : MonoBehaviour
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _socket.SendBufferSize = _socket.ReceiveBufferSize = short.MaxValue;
             _socket.NoDelay = true;
-            _socket.ReceiveTimeout = 500;
-            _socket.Connect(IP, PORT);
+            _socket.ReceiveTimeout = 1000;
+            await _socket.ConnectAsync(IP, PORT);
 
             if (_socket != null)
             {
                 if (_recvListen == null)
                 {
-                    _recvListen = new Thread(new ThreadStart(DoReceive));
-                    _recvListen.IsBackground = true;
+                    _recvListen = new Thread(DoReceive) {IsBackground = true};
                 }
 
                 if (!_recvListen.IsAlive)
                     _recvListen.Start();
             }
-
-            _socket.Send(_sendBuffer, 0, _sendBuffer.Length, SocketFlags.None);
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Debug.LogError(e);
             throw;
         }
 
         return _socket;
     }
 
+    public void Close()
+    {
+        _socket.Close();
+        _testBox.Close();
+        _recvListen.Abort();
+        _recvListen = null;
+    }
+
     private void DoReceive()
     {
-        string msg = "";
-
         do
         {
             recvSize = 0;
             try
             {
+                _socket.Send(_sendBuffer, 0, _sendBuffer.Length, SocketFlags.None);///
+
                 int size = MAX_BUFFER_SIZE - m_nRecvBufferSize;
                 if (size > 0)
                 {
-                    recvSize = _socket.Receive(_rcvBuffer, m_nRecvBufferSize, size, SocketFlags.None);
+                    recvSize = _socket.Receive(_rcvBuffer, 0, MAX_BUFFER_SIZE, SocketFlags.None);///
                     m_nRecvBufferSize += recvSize;
                     if (recvSize == 0)
                     {
@@ -88,12 +101,12 @@ public class NodeJsTCPPingpong : MonoBehaviour
                     }
                     else
                     {
-                        msg += Encoding.Default.GetString(_rcvBuffer);
+                        msg = Encoding.Default.GetString(_rcvBuffer);
                     }
                 }
                 else
                 {
-                    recvSize = 1;
+                    recvSize = 0;
                 }
             }
             catch (ObjectDisposedException)
@@ -110,12 +123,13 @@ public class NodeJsTCPPingpong : MonoBehaviour
                 Debug.LogError(ex);
             }
 
-            Debug.Log("DataReceive: " + recvSize);
+            // Debug.Log("DataReceive: " + recvSize);
+            recvCount++;
+
         } while (recvSize > 0);
 
-        Debug.Log(msg);
-
         Debug.Log("DataReceiveComplete");
+        Close();
     }
 
     private void OnDestroy()
@@ -124,10 +138,10 @@ public class NodeJsTCPPingpong : MonoBehaviour
         {
             _socket.Close();
             Debug.Log("Socket close");
-            
+            _socket = null;
         }
 
-        if (_recvListen.IsAlive)
+        if (_recvListen!=null && _recvListen.IsAlive)
         {
             _recvListen.Abort();
             Debug.Log("Thread abort");

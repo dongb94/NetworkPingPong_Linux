@@ -1,55 +1,70 @@
 var net_server = require('net');
 
+var index = 0;
+
 var server = net_server.createServer(function(client) {
 
+    client.id = index++;
 
-    console.log('Client connection: ');
+//    console.log('-----------------------');
 
-    console.log('   local = %s:%s', client.localAddress, client.localPort);
+    console.log('Client connection: ' + client.localAddress  + ":" + client.remotePort);
 
-    console.log('   remote = %s:%s', client.remoteAddress, client.remotePort);
+//    console.log('   local = %s:%s', client.localAddress, client.localPort);
+
+//    console.log('   remote = %s:%s', client.remoteAddress, client.remotePort);
+
+
+    server.getConnections(function(error,count){
+        console.log('number of connection = '+ count);
+    });
 
 
 
-    client.setTimeout(500);
+    client.setTimeout(10000);
 
     client.setEncoding('utf8');
 
 
 
     client.on('data', function(data) {
+//      console.log('Received data from client on port %d: %s', client.remotePort, data.toString());
 
-        console.log('Received data from client on port %d: %s', client.remotePort, data.toString());
+//      console.log(data);
 
+//      console.log(Uint8Array.from(data).toString());
 
+        writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
 
-        writeData(client, 'Sending: ' + data.toString());
+//      console.log('  Bytes sent: ' + client.bytesWritten);
 
-        console.log('  Bytes sent: ' + client.bytesWritten);
-
-    });
-
-
-
-    client.on('end', function() {
-
-        console.log('Client disconnected');
+//      console.log('  sent : ' + client.id);
 
     });
-
-
 
     client.on('error', function(err) {
 
-        console.log('Socket Error: ', JSON.stringify(err));
+        console.log('Socket Error: '+ client.id + ":", JSON.stringify(err));
 
     });
 
-
-
     client.on('timeout', function() {
 
-        console.log('Socket Timed out');
+        console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
+        client.destroy();
+
+    });
+
+    client.on('end', function() {
+
+        console.log('Client disconnected ' + client.id + ':' + client.remotePort);
+
+    });
+    client.on('close', function() {
+        console.log('socket close ' + client.id + ':' + client.remotePort);
+        server.getConnections(function(error,count){
+            console.log('number of connection = '+ count);
+        });
 
     });
 });
@@ -66,21 +81,24 @@ server.listen(3000, function() {
     });
 
     server.on('error', function(err){
-        
+
         console.log('Server Error: ', JSON.stringify(err));
 
     });
 });
 
-
+console.log('Server max connections : ' + server.maxConnections);
+server.getConnections(function(error,count){
+    console.log('number of connection = '+ count);
+});
 
 function writeData(socket, data){
 
-  var success = socket.write(data);
+    var success = socket.write(data);
 
-  if (!success){
+    if (!success){
 
-    console.log("Client Send Fail");
+        console.log("Client Send Fail");
 
-  }
+    }
 }

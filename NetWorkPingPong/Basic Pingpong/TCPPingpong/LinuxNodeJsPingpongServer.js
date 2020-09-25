@@ -8,7 +8,7 @@ var server = net_server.createServer(function(client) {
 
 //    console.log('-----------------------');
 
-    console.log('Client connection: ' + client.localAddress  + ":" + client.remotePort);
+//    console.log('Client connection: ' + client.localAddress  + ":" + client.remotePort);
 
 //    console.log('   local = %s:%s', client.localAddress, client.localPort);
 
@@ -16,7 +16,7 @@ var server = net_server.createServer(function(client) {
 
 
     server.getConnections(function(error,count){
-        console.log('number of connection = '+ count);
+        console.log('increase connection = '+ count);
     });
 
 
@@ -28,6 +28,7 @@ var server = net_server.createServer(function(client) {
 
 
     client.on('data', function(data) {
+
 //      console.log('Received data from client on port %d: %s', client.remotePort, data.toString());
 
 //      console.log(data);
@@ -50,30 +51,30 @@ var server = net_server.createServer(function(client) {
 
     client.on('timeout', function() {
 
-        console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
-        client.destroy();
+//      console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
+//      client.destroy();
 
     });
 
     client.on('end', function() {
 
-        console.log('Client disconnected ' + client.id + ':' + client.remotePort);
+//      console.log('Client disconnected ' + client.id + ':' + client.remotePort);
 
     });
+
     client.on('close', function() {
-        console.log('socket close ' + client.id + ':' + client.remotePort);
+//      console.log('socket close ' + client.id + ':' + client.remotePort);
         server.getConnections(function(error,count){
             console.log('number of connection = '+ count);
         });
-
     });
 });
 
 
-server.listen(3000, function() {
+server.listen(process.argv[2], function() {
 
     console.log('Server listening: ' + JSON.stringify(server.address()));
-
+    console.log('Server max connections : ' + server.maxConnections);
     server.on('close', function(){
 
         console.log('Server Terminated');
@@ -85,11 +86,6 @@ server.listen(3000, function() {
         console.log('Server Error: ', JSON.stringify(err));
 
     });
-});
-
-console.log('Server max connections : ' + server.maxConnections);
-server.getConnections(function(error,count){
-    console.log('number of connection = '+ count);
 });
 
 function writeData(socket, data){

@@ -1,15 +1,18 @@
-var fillter = require('./packetFiltering.js');
-var net_server = require('net');
-var gateway_server = require('net');
+let fillter = require('./packetFiltering.js');
+let net_server = require('net');
+let gateway_server = require('net');
 
-var index = 0;
-var gatewayIndex = 0;
-var clients = new Set();
-var gateways = new Set();
+let max_n_of_client = 500;
+let max_n_of_gateway = 20;
 
-var server = net_server.createServer(function(client) {
+let clientIndex = 0;
+let gatewayIndex = 0;
+let clients = new Map();
+let gateways = [];
 
-    client.id = index++;
+let server = net_server.createServer(function(client) {
+
+    client.id = clientIndex++;
 
 //    console.log('Client connection: ' + client.localAddress  + ":" + client.remotePort);
 //    console.log('   local = %s:%s', client.localAddress, client.localPort);
@@ -22,18 +25,30 @@ var server = net_server.createServer(function(client) {
     client.setTimeout(10000);
     client.setEncoding('utf8');
 
-    clients.add(client);
+    clients.set(client.remotePort, client);
 
     client.on('data', function(data) {
 
         writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
 
-//      console.log('Received data from client on port %d: %s', client.remotePort, data.toString());
-//      console.log(data);
-//      console.log(Uint8Array.from(data).toString());
+        let gwIndex = client.id % gateways.length;
+        console.log(gwIndex + "/" + gateways.length)
+        writeData(gateways[gwIndex], data);
 
-//      console.log('  Bytes sent: ' + client.bytesWritten);
-//      console.log('  sent : ' + client.id);
+        //      let buf = JSON.stringify(data);
+        //      console.log(buf);
+
+        //      console.log(data.toString("hex"));
+        //      console.log(data.length);
+
+        //      let buf_2 = Buffer.alloc(20, data.toString.toString(), 'base64');
+        //      console.log(buf_2.toString("hex"));
+
+        //      console.log('Received data from client on port %d: %s', client.remotePort, data.toString());
+        //      console.log(data);
+
+        //      console.log('  Bytes sent: ' + client.bytesWritten);
+        //      console.log('  sent : ' + client.id);
 
     });
 
@@ -46,7 +61,7 @@ var server = net_server.createServer(function(client) {
     client.on('timeout', function() {
 
         console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
-        client.destroy();
+//        client.end();
 
     });
 
@@ -61,11 +76,12 @@ var server = net_server.createServer(function(client) {
         server.getConnections(function(error,count){
                 console.log('number of connection = '+ count);
         });
-        clients.delete(client);
+        clients.delete(client.remotePort);
         console.log('clients size : ' + clients.size);
     });
 });
 
+server.maxConnections = max_n_of_client;
 server.listen(process.argv[2], function() {
 
     console.log('Server listening: ' + JSON.stringify(server.address()));
@@ -80,61 +96,67 @@ server.listen(process.argv[2], function() {
 });
 
 
-var gServer = gateway_server.createServer(function(client){
+let gServer = gateway_server.createServer(function(gateway){
 
-    client.id = gatewayIndex++;
+    gateway.id = gatewayIndex++;
 
-//    console.log('Gateway connection: ' + client.localAddress  + ":" + client.remotePort);
-//    console.log('   local = %s:%s', client.localAddress, client.localPort);
-//    console.log('   remote = %s:%s', client.remoteAddress, client.remotePort);
+//    console.log('Gateway connection: ' + gateway.localAddress  + ":" + gateway.remotePort);
+//    console.log('   local = %s:%s', gateway.localAddress, gateway.localPort);
+//    console.log('   remote = %s:%s', gateway.remoteAddress, gateway.remotePort);
 
-    server.getConnections(function(error,count){
+    gServer.getConnections(function(error,count){
         console.log('increase G connection = '+ count);
     });
 
-    client.setTimeout(10000);
-    client.setEncoding('utf8');
+    gateway.setTimeout(10000);
+    gateway.setEncoding('utf8');
 
-    gateways.add(client);
+    gateways.push(gateway);
 
-    client.on('data', function(data) {
+    gateway.on('data', function(data) {
 
-        writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
+//      writeData(gateway, 'Send: ' + data.toString()  + ' to ' +gateway.id.toString());
 
-//      console.log('Received data from gateway on port %d: %s', client.remotePort, data.toString());
+        writeData(clients[0], data);
+
+//      console.log('Received data from gateway on port %d: %s', gateway.remotePort, data.toString());
 //      console.log(Uint8Array.from(data).toString());
 
-//      console.log('  Bytes sent: ' + client.bytesWritten);
+//      console.log('  Bytes sent: ' + gateway.bytesWritten);
 
     });
 
-    client.on('error', function(err) {
+    gateway.on('error', function(err) {
 
-        console.log('Gateway Socket Error: '+ client.id + ":", JSON.stringify(err));
-
-    });
-
-    client.on('timeout', function() {
-
-      console.log('Gateway Timed out ::  ' + client.id + ':' + client.remotePort);
-//      client.destroy();
+        console.log('Gateway Socket Error: '+ gateway.id + ":", JSON.stringify(err));
 
     });
 
-    client.on('end', function() {
+    gateway.on('timeout', function() {
 
-//      console.log('Gateway disconnected :: ' + client.id + ':' + client.remotePort);
+      console.log('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
+//      gateway.end();
 
     });
 
-    client.on('close', function() {
-//      console.log('Gateway close :: ' + client.id + ':' + client.remotePort);
+    gateway.on('end', function() {
+
+//      console.log('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
+
+    });
+
+    gateway.on('close', function() {
+//      console.log('Gateway close :: ' + gateway.id + ':' + gateway.remotePort);
+
+        gateways.splice(gateways.indexOf(gateway),1);
+
         gServer.getConnections(function(error,count){
-                console.log('number of G connection = '+ count);
+            console.log('number of G connection = '+ count);
         });
     });
 });
 
+gServer.maxConnections = max_n_of_gateway;
 gServer.listen(process.argv[3], function() {
 
     console.log('gServer listening: ' + JSON.stringify(gServer.address()));
@@ -150,9 +172,13 @@ gServer.listen(process.argv[3], function() {
 
 function writeData(socket, data){
 
-  var success = socket.write(data);
+    if(socket == NaN || socket == undefined){
+        console.log("Send to undefined socket");
+    }
+
+  let success = socket.write(data);
 
   if (!success){
-//      console.log("Client Send Fail : "+data);
+      console.log("Client Send Fail : "+data);
   }
 }

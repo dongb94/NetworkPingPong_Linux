@@ -2,6 +2,7 @@ let fillter = require('./packetFiltering.js');
 let net_server = require('net');
 let gateway_server = require('net');
 
+
 let max_n_of_client = 500;
 let max_n_of_gateway = 20;
 
@@ -23,34 +24,25 @@ let server = net_server.createServer(function(client) {
     });
 
     client.setTimeout(10000);
-    client.setEncoding('utf8');
 
     clients.set(client.remotePort, client);
 
-    client.on('data', function(data) {
+    client.on('data', function(recvBuffer) {
 
-        writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
+//      writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
+
+//      console.log(data.readUInt16BE(0).toString());
+//      console.log('data.length : ' + data.length);
+        if(gateways.length == 0){
+                console.log('[ERROR] no gateway connected');
+        }
 
         let gwIndex = client.id % gateways.length;
-        console.log(gwIndex + "/" + gateways.length)
+
+        console.log(gwIndex + "/" + gateways.length);
         writeData(gateways[gwIndex], data);
-
-        //      let buf = JSON.stringify(data);
-        //      console.log(buf);
-
-        //      console.log(data.toString("hex"));
-        //      console.log(data.length);
-
-        //      let buf_2 = Buffer.alloc(20, data.toString.toString(), 'base64');
-        //      console.log(buf_2.toString("hex"));
-
-        //      console.log('Received data from client on port %d: %s', client.remotePort, data.toString());
-        //      console.log(data);
-
-        //      console.log('  Bytes sent: ' + client.bytesWritten);
-        //      console.log('  sent : ' + client.id);
-
     });
+        
 
     client.on('error', function(err) {
 
@@ -113,16 +105,9 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateways.push(gateway);
 
-    gateway.on('data', function(data) {
+    gateway.on('data', function(recvBuffer) {
 
-//      writeData(gateway, 'Send: ' + data.toString()  + ' to ' +gateway.id.toString());
-
-        writeData(clients[0], data);
-
-//      console.log('Received data from gateway on port %d: %s', gateway.remotePort, data.toString());
-//      console.log(Uint8Array.from(data).toString());
-
-//      console.log('  Bytes sent: ' + gateway.bytesWritten);
+        writeData(clients[0], recvBuffer);
 
     });
 
@@ -176,9 +161,9 @@ function writeData(socket, data){
         console.log("Send to undefined socket");
     }
 
-  let success = socket.write(data);
+    let success = socket.write(data);
 
-  if (!success){
-      console.log("Client Send Fail : "+data);
-  }
+    if (!success){
+        console.log("Client Send Fail : "+data);
+    }
 }

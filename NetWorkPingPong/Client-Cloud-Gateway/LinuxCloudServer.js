@@ -2,7 +2,6 @@ let fillter = require('./packetFiltering.js');
 let net_server = require('net');
 let gateway_server = require('net');
 
-
 let max_n_of_client = 500;
 let max_n_of_gateway = 20;
 
@@ -40,7 +39,7 @@ let server = net_server.createServer(function(client) {
         let gwIndex = client.id % gateways.length;
 
         console.log(gwIndex + "/" + gateways.length);
-        writeData(gateways[gwIndex], data);
+        writeData(gateways[gwIndex], recvBuffer);
     });
         
 

@@ -33,15 +33,15 @@ let server = net_server.createServer(function(client) {
 //      console.log(data.readUInt16BE(0).toString());
 //      console.log('data.length : ' + data.length);
         if(gateways.length == 0){
-                console.log('[ERROR] no gateway connected');
+            console.log('[ERROR] no gateway connected');
         }
-
-        let gwIndex = client.id % gateways.length;
-
-        console.log(gwIndex + "/" + gateways.length);
-        writeData(gateways[gwIndex], recvBuffer);
+        else{
+            let gwIndex = client.id % gateways.length;
+            console.log(gwIndex + "/" + gateways.length);
+            writeData(gateways[gwIndex], recvBuffer);
+        }
     });
-        
+
 
     client.on('error', function(err) {
 

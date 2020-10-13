@@ -1,0 +1,26 @@
+start :
+	make 0.open
+	make 1.open
+
+%.open : nodeJsRepeater.js
+	node nodeJsRepeater.js 300$* 301$* &
+
+%.js :
+	cp test.js $@
+
+copy :
+	cp test.js nodeJsRepeater.js
+
+close :
+	pkill -9 -ef node
+
+reset :
+	make close
+	make start
+
+removeServer :
+	rm nodeJsRepeater.js
+
+test :
+	make copy
+	make 0.open

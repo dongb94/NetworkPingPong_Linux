@@ -32,6 +32,16 @@ let server = net_server.createServer(function(client) {
 
 //      console.log(data.readUInt16BE(0).toString());
 //      console.log('data.length : ' + data.length);
+
+        if(!fillter.CheckMagicNumber(recvBuffer)){
+            console.log('[PACKET ERROR]');
+            return;
+        }
+        else
+        {
+            fillter.InsertPortNum(recvBuffer, client.remotePort);
+        }
+
         if(gateways.length == 0){
             console.log('[ERROR] no gateway connected');
         }
@@ -100,14 +110,19 @@ let gServer = gateway_server.createServer(function(gateway){
     });
 
     gateway.setTimeout(10000);
-    gateway.setEncoding('utf8');
 
     gateways.push(gateway);
 
     gateway.on('data', function(recvBuffer) {
 
-        writeData(clients[0], recvBuffer);
+        let clientPort = fillter.GetPortNum(recvBuffer);
 
+        console.log('send server data to client: '+clientPort +' // data length : '+recvBuffer.length);
+
+        console.log(clients[clientPort]);
+        console.log(clients.keys());
+
+        writeData(clients[clientPort], recvBuffer);
     });
 
     gateway.on('error', function(err) {

@@ -10,9 +10,12 @@ let gatewayIndex = 0;
 let clients = new Map();
 let gateways = [];
 
+let temp = 0;
+
 let server = net_server.createServer(function(client) {
 
     client.id = clientIndex++;
+    temp = client.remotePort;
 
 //    console.log('Client connection: ' + client.localAddress  + ":" + client.remotePort);
 //    console.log('   local = %s:%s', client.localAddress, client.localPort);
@@ -119,10 +122,9 @@ let gServer = gateway_server.createServer(function(gateway){
 
         console.log('send server data to client: '+clientPort +' // data length : '+recvBuffer.length);
 
-        console.log(clients[clientPort]);
-        console.log(clients.keys());
+        console.log(recvBuffer.readInt16BE(0).toString());
 
-        writeData(clients[clientPort], recvBuffer);
+        writeData(clients.get(temp), recvBuffer);
     });
 
     gateway.on('error', function(err) {

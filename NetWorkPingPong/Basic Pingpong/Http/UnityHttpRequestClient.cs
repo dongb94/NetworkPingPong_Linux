@@ -15,7 +15,7 @@ public class UnityNodeJSClient : MonoBehaviour
     public void ConnectServer()
     {
         StartCoroutine(GetText());
-    } 
+    }
     
     IEnumerator GetText() {
         UnityWebRequest www = UnityWebRequest.Get(IP_ADDR);

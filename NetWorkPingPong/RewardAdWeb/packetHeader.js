@@ -1,33 +1,35 @@
 const HeaderSize = 56;
 exports.HeaderSize = HeaderSize;
 const MAGIC_NUMBER = Buffer.from([0x38, 0x12, 0x12, 0x12, 0x81, 0x28, 0x28, 0x28]);
+MAGIC_NUMBER.swap64(); // make Magic number to Little Endian
 
 exports.MakeHeader = function(){
 
     let header = Buffer.alloc(HeaderSize);
 
-    let offset = 0;
 
     //1st header
-    offset += header.writeBigInt64BE(MAGIC_NUMBER, offset); // magic number
-    offset += header.writeBigInt64BE(MAGIC_NUMBER, offset); // time
-    offset += header.writeBigInt64BE(0x00, offset); // sessid
-    offset += header.writeInt16BE(0x00, offset); // size
-    offset += header.writeInt8BE(0x00, offset); // enc flag
-    offset += header.writeInt8BE(0x00, offset); // enc type
-    offset += header.writeInt16BE(0x10, offset); // pkt ver
-    offset += header.writeInt16BE(0x00, offset); // make total size 32
+    let offset = MAGIC_NUMBER.copy(header, 0, 0, 8); // magic number        offset = 8
+    offset = header.writeIntLE(0x00, offset, 8);    // time                 offset = 16
+    offset = header.writeIntLE(0x00, offset, 8);    // sessid               offset = 24
+    offset = header.writeInt16LE(0x00, offset);     // size                 offset = 26
+    offset = header.writeInt8(0x00, offset);        // enc flag             offset = 27
+    offset = header.writeInt8(0x00, offset);        // enc type             offset = 28
+    offset = header.writeInt16LE(0x10, offset);     // pkt ver              offset = 30
+    offset = header.writeInt16LE(0x00, offset);     // make total size 32   offset = 32 (byte)
+    // console.log(`offset : ${offset}`);
+    // console.log(header);
 
     //2nd header
-    offset += header.writeInt16BE(0x00, offset); // Svc ID
-    offset += header.writeInt16BE(0x00, offset); // Msg ID
-    offset += header.writeInt16BE(0x00, offset); // Serial
-    offset += header.writeInt16BE(0x00, offset); // Result
-    offset += header.writeInt32BE(0x00, offset); // CRC
-    offset += header.writeInt32BE(0x00, offset); // client IP Addr
-    offset += header.writeInt32BE(0x00, offset); // server IP Addr
-    offset += header.writeInt16BE(0x00, offset); // client port
-    offset += header.writeInt16BE(0x00, offset); // server port
+    offset = header.writeInt16LE(0x00, offset); // Svc ID           offset = 34
+    offset = header.writeInt16LE(0x00, offset); // Msg ID           offset = 36
+    offset = header.writeInt16LE(0x00, offset); // Serial           offset = 38
+    offset = header.writeInt16LE(0x00, offset); // Result           offset = 40
+    offset = header.writeInt32LE(0x00, offset); // CRC              offset = 44
+    offset = header.writeInt32LE(0x00, offset); // client IP Addr   offset = 48
+    offset = header.writeInt32LE(0x00, offset); // server IP Addr   offset = 52
+    offset = header.writeInt16LE(0x00, offset); // client port      offset = 54
+    offset = header.writeInt16LE(0x00, offset); // server port      offset = 56 (byte)
 
     return header;
 }

@@ -15,8 +15,9 @@ let app = http.createServer(function(request,response){
 
     responses.set(queryData.mac_address, response);
 
-    let buffer = Buffer.from(header.MakeHeader(), 0, 512);
-    let offset = header.HeaderSize;
+    let buffer = Buffer.alloc(512);
+    let offset = header.MakeHeader().copy(buffer, 0, 0, header.HeaderSize);
+
     buffer.write(queryData.snuid, offset, 'utf-8');
     offset += 64;
     buffer.write(queryData.currency, offset, 'utf-8');

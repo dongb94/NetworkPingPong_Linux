@@ -1,3 +1,4 @@
+let header = require('./packetHeader');
 let http = require('http');
 let net  = require('net');
 let url = require('url');
@@ -14,8 +15,8 @@ let app = http.createServer(function(request,response){
 
     responses.set(queryData.mac_address, response);
 
-    let offset = 0;
-    let buffer = Buffer.alloc(256);
+    let buffer = Buffer.from(header.MakeHeader(), 0, 512);
+    let offset = header.HeaderSize;
     buffer.write(queryData.snuid, offset, 'utf-8');
     offset += 64;
     buffer.write(queryData.currency, offset, 'utf-8');
@@ -25,7 +26,7 @@ let app = http.createServer(function(request,response){
     buffer.write(queryData.display_multiplier, offset, 'utf-8');
     offset += 32;
     // console.log(`len = ${offset}`);
-    // console.log(buffer);
+    console.log(buffer.toString('hex'));
 
     if(gateways.length == 0){
         console.log('[ERROR] no gateway connected');

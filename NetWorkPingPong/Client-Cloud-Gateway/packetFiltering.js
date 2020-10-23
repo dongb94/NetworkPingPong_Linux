@@ -27,3 +27,7 @@ exports.Add0Header = function(recvBuffer = new Buffer){
 
     return recvBuffer;
 }
+
+exports.Delete0Header = function(sendBuffer = new Buffer){
+    
+}

@@ -33,3 +33,7 @@ exports.MakeHeader = function(){
 
     return header;
 }
+
+exports.RemoveHeader = function(buffer = Buffer){
+    return buffer.slice(HeaderSize);
+}

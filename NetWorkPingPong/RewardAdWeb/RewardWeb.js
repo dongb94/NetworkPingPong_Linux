@@ -59,13 +59,19 @@ let server = net.createServer(function(gateway){
 
     gateway.on('data', function(recvBuffer) {
 
-        let clientPort = fillter.GetPortNum(recvBuffer);
-        let head;
-        let mac_address;
+        let res = header.RemoveHeader(recvBuffer);
+        let result = res.slice(0,2);
+        let key = res.slice(2);
 
+        if(responses.has(key.toString)){
+            responses.get(key.toString).writeHead(result.toString);
+            responses.end();
+        }
+        else{
+            console.log(`< client key not found expection > || [key : ${key.toString}]`);
+        }
+        
         console.log(recvBuffer.readInt16BE(0).toString());
-
-        responses.get(mac_address).writeHead(head);
     });
 
     gateway.on('error', function(err) {

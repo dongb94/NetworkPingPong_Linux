@@ -22,7 +22,7 @@ exports.MakeHeader = function(){
 
     //2nd header
     offset = header.writeInt16LE(0x00, offset); // Svc ID           offset = 34
-    offset = header.writeInt16LE(0x00, offset); // Msg ID           offset = 36
+    offset = header.writeInt16LE(0x900, offset);// Msg ID           offset = 36
     offset = header.writeInt16LE(0x00, offset); // Serial           offset = 38
     offset = header.writeInt16LE(0x00, offset); // Result           offset = 40
     offset = header.writeInt32LE(0x00, offset); // CRC              offset = 44

@@ -15,15 +15,15 @@ let app = http.createServer(function(request,response){
 
     responses.set(queryData.mac_address, response);
 
-    let buffer = Buffer.alloc(512);
+    let buffer = Buffer.alloc(256);
     let offset = header.MakeHeader().copy(buffer, 0, 0, header.HeaderSize);
 
-    buffer.write(queryData.snuid, offset, 'utf-8');
+    buffer.write(queryData.snuid, offset, 'hex');
     offset += 64;
     buffer.write(queryData.currency, offset, 'utf-8');
-    offset += 32;
-    buffer.write(queryData.mac_address, offset, 'utf-8');
-    offset += 128;
+    offset += 16;
+    // buffer.write(queryData.mac_address, offset, 'utf-8');
+    // offset += 128;
     buffer.write(queryData.display_multiplier, offset, 'utf-8');
     offset += 32;
     // console.log(`len = ${offset}`);
@@ -31,6 +31,8 @@ let app = http.createServer(function(request,response){
 
     if(gateways.length == 0){
         console.log('[ERROR] no gateway connected');
+        response.writeHead(403); // 성공했다면 200을 보낸다.
+        response.end();
     }
     else{
         let gwIndex = request.remotePort % gateways.length;
@@ -38,15 +40,7 @@ let app = http.createServer(function(request,response){
         writeData(gateways[gwIndex], buffer);
     }
 
-    if(_url == '/'){
-        _url = '/index.html';
-    }
-    if(_url == '/favicon.ico'){ // 실패했을 경우 403을 보낸다.
-        response.writeHead(403); 
-        response.end();
-        return;
-    }
-    response.writeHead(200); // 성공했다면 200을 보낸다.
+    response.writeHead(403); // 성공했다면 200을 보낸다.
     response.end();
 });
 app.listen(process.argv[2], () =>{

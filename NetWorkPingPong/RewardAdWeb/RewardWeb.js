@@ -15,17 +15,17 @@ let app = http.createServer(function(request,response){
 
     responses.set(queryData.mac_address, response);
 
-    let buffer = Buffer.alloc(256);
+    let buffer = Buffer.alloc(128);
     let offset = header.MakeHeader().copy(buffer, 0, 0, header.HeaderSize);
 
     buffer.write(queryData.snuid, offset, 'hex');
-    offset += 64;
+    offset += 32;
     buffer.write(queryData.currency, offset, 'utf-8');
     offset += 16;
     // buffer.write(queryData.mac_address, offset, 'utf-8');
     // offset += 128;
     buffer.write(queryData.display_multiplier, offset, 'utf-8');
-    offset += 32;
+    offset += 16;
     // console.log(`len = ${offset}`);
     console.log(buffer.toString('hex'));
 

@@ -13,7 +13,7 @@ let app = http.createServer(function(request,response){
     let queryData = url.parse(_url, true).query;
     console.log(queryData);
 
-    responses.set(queryData.mac_address, response);
+    responses.set(queryData.snuid, response);
 
     let buffer = Buffer.alloc(128);
     let offset = header.MakeHeader().copy(buffer, 0, 0, header.HeaderSize);
@@ -24,8 +24,8 @@ let app = http.createServer(function(request,response){
     offset += 16;
     // buffer.write(queryData.mac_address, offset, 'utf-8');
     // offset += 128;
-    buffer.write(queryData.display_multiplier, offset, 'utf-8');
-    offset += 16;
+    // buffer.write(queryData.display_multiplier, offset, 'utf-8');
+    // offset += 16;
     // console.log(`len = ${offset}`);
     console.log(buffer.toString('hex'));
 
@@ -40,8 +40,8 @@ let app = http.createServer(function(request,response){
         writeData(gateways[gwIndex], buffer);
     }
 
-    response.writeHead(403); // 성공했다면 200을 보낸다.
-    response.end();
+    // response.writeHead(403); // 성공했다면 200을 보낸다.
+    // response.end();
 });
 app.listen(process.argv[2], () =>{
     console.log('listening on 3080');
@@ -57,12 +57,12 @@ let server = net.createServer(function(gateway){
         let result = res.slice(0,2);
         let key = res.slice(2);
 
-        if(responses.has(key.toString)){
-            responses.get(key.toString).writeHead(result.toString);
+        if(responses.has(key.toString())){
+            responses.get(key.toString()).writeHead(result);
             responses.end();
         }
         else{
-            console.log(`< client key not found expection > || [key : ${key.toString}]`);
+            console.log(`< client key not found expection > || [key : ${key.toString}] || [result : ${result}]`);
         }
         
         console.log(recvBuffer.readInt16BE(0).toString());
@@ -80,13 +80,7 @@ let server = net.createServer(function(gateway){
 //      gateway.end();
 
     });
-
-    gateway.on('end', function() {
-
-//      console.log('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
-
-    });
-
+    
     gateway.on('close', function() {
 //      console.log('Gateway close :: ' + gateway.id + ':' + gateway.remotePort);
 

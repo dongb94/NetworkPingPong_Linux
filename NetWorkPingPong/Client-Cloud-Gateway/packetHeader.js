@@ -3,10 +3,9 @@ exports.HeaderSize = HeaderSize;
 const MAGIC_NUMBER = Buffer.from([0x38, 0x12, 0x12, 0x12, 0x81, 0x28, 0x28, 0x28]);
 MAGIC_NUMBER.swap64(); // make Magic number to Little Endian
 
-exports.MakeHeader = function(){
+exports.CreateHeader = function(){
 
     let header = Buffer.alloc(HeaderSize);
-
 
     //1st header
     let offset = MAGIC_NUMBER.copy(header, 0, 0, 8); // magic number        offset = 8
@@ -38,7 +37,15 @@ exports.RemoveHeader = function(buffer = Buffer){
     return buffer.slice(HeaderSize);
 }
 
-exports.Add0Header = function(recvBuffer = new Buffer, clientPort){
+
+/////////////////////////////////////////////////
+const Header0Size = 32;
+exports.Header0Size = Header0Size;
+
+exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
+
+    let header0 = Buffer.alloc(Header0Size);
+
 	let offset = 0;
 	offset += recvBuffer.writeUInt16LE(clientPort, offset);		// Client Remote Port
 	offset += recvBuffer.writeUInt16LE(clientPort, offset);		// Client Remote Port
@@ -46,6 +53,6 @@ exports.Add0Header = function(recvBuffer = new Buffer, clientPort){
 	return recvBuffer;
 }
 
-exports.Delete0Header = function(sendBuffer = new Buffer){
-
+exports.Remove0Header = function(sendBuffer = new Buffer){
+    return sendBuffer.slice(Header0Size);
 }

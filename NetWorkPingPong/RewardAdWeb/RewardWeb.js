@@ -16,7 +16,7 @@ let app = http.createServer(function(request,response){
     responses.set(queryData.snuid, response);
 
     let buffer = Buffer.alloc(128);
-    let offset = header.MakeHeader().copy(buffer, 0, 0, header.HeaderSize);
+    let offset = header.CreateHeader().copy(buffer, 0, 0, header.HeaderSize);
 
     buffer.write(queryData.snuid, offset, 'hex');
     offset += 32;

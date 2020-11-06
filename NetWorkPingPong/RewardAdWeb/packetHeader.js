@@ -3,7 +3,7 @@ exports.HeaderSize = HeaderSize;
 const MAGIC_NUMBER = Buffer.from([0x38, 0x12, 0x12, 0x12, 0x81, 0x28, 0x28, 0x28]);
 MAGIC_NUMBER.swap64(); // make Magic number to Little Endian
 
-exports.MakeHeader = function(){
+exports.CreateHeader = function(){
 
     let header = Buffer.alloc(HeaderSize);
 

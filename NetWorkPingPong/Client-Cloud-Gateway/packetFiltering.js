@@ -4,30 +4,21 @@ MAGIC_NUMBER.swap64();
 
 exports.CheckMagicNumber = function(recvBuffer = new Buffer()){
 
-    if(MAGIC_NUMBER.compare(recvBuffer, 0, 8) != 0 ){
-        let packet = recvBuffer.readIntLE(0,8);
-        console.log('[Packet Error] Magic Number does not match : ' + packet.toString(16));
-        return false;
-    }
+	if(MAGIC_NUMBER.compare(recvBuffer, 0, 8) != 0 ){
+		let packet = recvBuffer.readIntLE(0,8);
+		console.log('[Packet Error] Magic Number does not match : ' + packet.toString(16));
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 exports.InsertPortNum = function(recvBuffer = new Buffer, clientPort){
-    recvBuffer.writeInt16BE(clientPort ,Header_1st_Size + 20);
+	recvBuffer.writeInt16BE(clientPort ,Header_1st_Size + 20);
 }
 
 exports.GetPortNum = function(recvBuffer = new Buffer){
-    console.log('[PortNum] 0x' + recvBuffer.readInt16BE(Header_1st_Size + 20).toString(16) + "");
-    return recvBuffer.readInt16BE(Header_1st_Size + 20);
+	console.log('[PortNum] 0x' + recvBuffer.readInt16BE(Header_1st_Size + 20).toString(16) + "");
+	return recvBuffer.readInt16BE(Header_1st_Size + 20);
 }
 
-exports.Add0Header = function(recvBuffer = new Buffer){
-    
-
-    return recvBuffer;
-}
-
-exports.Delete0Header = function(sendBuffer = new Buffer){
-    
-}

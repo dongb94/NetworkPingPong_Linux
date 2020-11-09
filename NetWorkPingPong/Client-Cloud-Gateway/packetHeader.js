@@ -1,3 +1,6 @@
+const { Buffer } = require("buffer");
+
+////////////////////////	Header 1 	/////////////////////////
 const HeaderSize = 56;
 exports.HeaderSize = HeaderSize;
 const MAGIC_NUMBER = Buffer.from([0x38, 0x12, 0x12, 0x12, 0x81, 0x28, 0x28, 0x28]);
@@ -38,7 +41,7 @@ exports.RemoveHeader = function(buffer = Buffer){
 }
 
 
-/////////////////////////////////////////////////
+////////////////////////	Header 0 	/////////////////////////
 const Header0Size = 32;
 exports.Header0Size = Header0Size;
 
@@ -55,4 +58,8 @@ exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
 
 exports.Remove0Header = function(sendBuffer = new Buffer){
     return sendBuffer.slice(Header0Size);
+}
+
+exports.GetClientPort = function(sendBuffer = new Buffer){
+	return sendBuffer.readInt16LE(0);
 }

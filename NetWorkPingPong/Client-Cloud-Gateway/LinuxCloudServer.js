@@ -1,4 +1,5 @@
 let fillter = require('./packetFiltering.js');
+let header = require('./packetHeader.js');
 let net_server = require('net');
 let gateway_server = require('net');
 
@@ -37,12 +38,12 @@ let server = net_server.createServer(function(client) {
 //      console.log('data.length : ' + data.length);
 
         if(!fillter.CheckMagicNumber(recvBuffer)){
-            console.log('[PACKET ERROR]');
+            console.log('[PACKET ERROR] Magic Number is wrong');
             return;
         }
         else
         {
-            fillter.InsertPortNum(recvBuffer, client.remotePort);
+            header.Create0Header(recvBuffer, client.remotePort);
         }
 
         if(gateways.length == 0){
@@ -54,7 +55,6 @@ let server = net_server.createServer(function(client) {
             writeData(gateways[gwIndex], recvBuffer);
         }
     });
-
 
     client.on('error', function(err) {
 
@@ -99,7 +99,6 @@ server.listen(process.argv[2], function() {
     });
 });
 
-
 let gServer = gateway_server.createServer(function(gateway){
 
     gateway.id = gatewayIndex++;
@@ -118,13 +117,15 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.on('data', function(recvBuffer) {
 
-        let clientPort = fillter.GetPortNum(recvBuffer);
+        let clientPort = header.GetClientPort(recvBuffer);
 
-        console.log('send server data to client: '+clientPort +' // data length : '+recvBuffer.length);
+        recvBuffer = header.RemoveHeader(recvBuffer);
+
+        console.log('send server data to client: '+ clientPort +' // data length : '+recvBuffer.length);
 
         console.log(recvBuffer.readInt16BE(0).toString());
 
-        writeData(clients.get(temp), recvBuffer);
+        writeData(clients.get(clientPort), recvBuffer);
     });
 
     gateway.on('error', function(err) {

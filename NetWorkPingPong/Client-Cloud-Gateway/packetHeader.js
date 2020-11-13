@@ -51,7 +51,7 @@ exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
 
 	let offset = 0;
 	offset += recvBuffer.writeUInt16LE(clientPort, offset);		// Client Remote Port
-	offset += recvBuffer.writeUInt16LE(clientPort, offset);		// Client Remote Port
+	offset += recvBuffer.writeUInt16LE(0x0000, offset);			// C_PORT_CLOUD linux msg id
 	
 	return recvBuffer;
 }

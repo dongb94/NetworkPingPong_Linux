@@ -34,17 +34,17 @@ let server = net_server.createServer(function(client) {
 
 //      writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
 
-//      console.log(data.readUInt16BE(0).toString());
-//      console.log('data.length : ' + data.length);
-
         if(!fillter.CheckMagicNumber(recvBuffer)){
             console.log('[PACKET ERROR] Magic Number is wrong');
             return;
         }
         else
         {
-            header.Create0Header(recvBuffer, client.remotePort);
+            recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
         }
+
+//      console.log(data.readUInt16BE(0).toString());
+//      console.log('data.length : ' + data.length);
 
         if(gateways.length == 0){
             console.log('[ERROR] no gateway connected');
@@ -119,7 +119,7 @@ let gServer = gateway_server.createServer(function(gateway){
 
         let clientPort = header.GetClientPort(recvBuffer);
 
-        recvBuffer = header.RemoveHeader(recvBuffer);
+        recvBuffer = header.Remove0Header(recvBuffer);
 
         console.log('send server data to client: '+ clientPort +' // data length : '+recvBuffer.length);
 

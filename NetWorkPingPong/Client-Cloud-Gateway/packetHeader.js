@@ -50,10 +50,12 @@ exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
     let header0 = Buffer.alloc(Header0Size);
 
 	let offset = 0;
-	offset += recvBuffer.writeUInt16LE(clientPort, offset);		// Client Remote Port
-	offset += recvBuffer.writeUInt16LE(0x0000, offset);			// C_PORT_CLOUD linux msg id
-	
-	return recvBuffer;
+	offset += header0.writeUInt16LE(clientPort, offset);		// Client Remote Port
+	offset += header0.writeUInt16LE(0x0000, offset);			// C_PORT_CLOUD linux msg id
+
+	const newBuffer = Buffer.concat([header0,recvBuffer], Header0Size + recvBuffer.length);
+
+	return newBuffer;
 }
 
 exports.Remove0Header = function(sendBuffer = new Buffer){

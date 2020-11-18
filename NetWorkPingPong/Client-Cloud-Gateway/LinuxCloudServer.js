@@ -34,8 +34,7 @@ let server = net_server.createServer(function(client) {
 
 //      writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
 
-        if(!fillter.CheckMagicNumber(recvBuffer)){
-            console.log('[PACKET ERROR] Magic Number is wrong');
+        if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
             return;
         }
         else
@@ -43,8 +42,8 @@ let server = net_server.createServer(function(client) {
             recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
         }
 
-//      console.log(data.readUInt16BE(0).toString());
-//      console.log('data.length : ' + data.length);
+		console.log(recvBuffer.toString('hex'));
+		console.log('data.length : ' + recvBuffer.length);
 
         if(gateways.length == 0){
             console.log('[ERROR] no gateway connected');

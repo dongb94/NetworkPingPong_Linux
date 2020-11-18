@@ -42,7 +42,7 @@ exports.RemoveHeader = function(buffer = Buffer){
 
 
 ////////////////////////	Header 0 	/////////////////////////
-const Header0Size = 32;
+const Header0Size = 4;
 exports.Header0Size = Header0Size;
 
 exports.Create0Header = function(recvBuffer = new Buffer, clientPort){

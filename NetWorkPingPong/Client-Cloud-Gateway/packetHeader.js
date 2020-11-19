@@ -42,7 +42,7 @@ exports.RemoveHeader = function(buffer = Buffer){
 
 
 ////////////////////////	Header 0 	/////////////////////////
-const Header0Size = 4;
+const Header0Size = 8;
 exports.Header0Size = Header0Size;
 
 exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
@@ -52,6 +52,7 @@ exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
 	let offset = 0;
 	offset += header0.writeUInt16LE(clientPort, offset);		// Client Remote Port
 	offset += header0.writeUInt16LE(0x0000, offset);			// C_PORT_CLOUD linux msg id
+	offset += header0.writeUInt32LE(0x00, offset);
 
 	const newBuffer = Buffer.concat([header0,recvBuffer], Header0Size + recvBuffer.length);
 

@@ -42,8 +42,8 @@ let server = net_server.createServer(function(client) {
             recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
         }
 
-		console.log(recvBuffer.toString('hex'));
-		console.log('data.length : ' + recvBuffer.length);
+		console.log('client data.length : ' + recvBuffer.length);
+		console.log(`[C] : ${recvBuffer.toString('hex')}`);
 
         if(gateways.length == 0){
             console.log('[ERROR] no gateway connected');
@@ -116,13 +116,22 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.on('data', function(recvBuffer) {
 
+        console.log(`vvvvvvvvvvvvvvvvvvvvvvvvvvvv`);
+        console.log(recvBuffer.toString('hex'));
+        console.log(`----------------------------`);
         let clientPort = header.GetClientPort(recvBuffer);
 
         recvBuffer = header.Remove0Header(recvBuffer);
 
         console.log('send server data to client: '+ clientPort +' // data length : '+recvBuffer.length);
 
-        console.log(recvBuffer.readInt16BE(0).toString());
+        console.log(`[S] : ${recvBuffer.toString('hex')}`);
+
+		let target = clients.get(clientPort);
+		if(target == undefined) {
+			console.log('target client was disconnected');
+			return;
+		}
 
         writeData(clients.get(clientPort), recvBuffer);
     });
@@ -174,7 +183,8 @@ gServer.listen(process.argv[3], function() {
 function writeData(socket, data){
 
     if(socket == NaN || socket == undefined){
-        console.log("Send to undefined socket");
+		console.log("Send to undefined socket");
+		return;
     }
 
     let success = socket.write(data);

@@ -23,7 +23,7 @@ let server = net_server.createServer(function(client) {
 //    console.log('   remote = %s:%s', client.remoteAddress, client.remotePort);
 
     server.getConnections(function(error,count){
-        console.log(`client connected = [rport : ${client.remotePort}][nofc : ${count}]`);
+        console.log(`C conn [rport : ${client.remotePort}][nofc : ${count}]`);
     });
 
     client.setTimeout(10000);
@@ -107,7 +107,7 @@ let gServer = gateway_server.createServer(function(gateway){
 //    console.log('   remote = %s:%s', gateway.remoteAddress, gateway.remotePort);
 
     gServer.getConnections(function(error,count){
-		console.log(`gateway connected = [rport : ${gateway.remotePort}][nofc : ${count}]`);
+		console.log(`G conn [rport : ${gateway.remotePort}][nofc : ${count}]`);
     });
 
     gateway.setTimeout(10000);

@@ -23,7 +23,7 @@ let server = net_server.createServer(function(client) {
 //    console.log('   remote = %s:%s', client.remoteAddress, client.remotePort);
 
     server.getConnections(function(error,count){
-        console.log('increase connection = '+ count);
+        console.log(`client connected = [rport : ${client.remotePort}][nofc : ${count}]`);
     });
 
     client.setTimeout(10000);
@@ -42,7 +42,7 @@ let server = net_server.createServer(function(client) {
             recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
         }
 
-		console.log('client data.length : ' + recvBuffer.length);
+		console.log('[Client] data.length : ' + recvBuffer.length);
 		console.log(`[C] : ${recvBuffer.toString('hex')}`);
 
         if(gateways.length == 0){
@@ -57,13 +57,13 @@ let server = net_server.createServer(function(client) {
 
     client.on('error', function(err) {
 
-        console.log('Socket Error: '+ client.id + ":", JSON.stringify(err));
+        console.log('[SOCKET ERROR] Client id: '+ client.id + "\n   >> msg >> ", JSON.stringify(err));
 
     });
 
     client.on('timeout', function() {
 
-        console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
+//        console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
 //        client.end();
 
     });
@@ -94,7 +94,7 @@ server.listen(process.argv[2], function() {
     });
 
     server.on('error', function(err){
-        console.log('Server Error: ', JSON.stringify(err));
+        console.log('[C SERVER ERROR] ', JSON.stringify(err));
     });
 });
 
@@ -107,7 +107,7 @@ let gServer = gateway_server.createServer(function(gateway){
 //    console.log('   remote = %s:%s', gateway.remoteAddress, gateway.remotePort);
 
     gServer.getConnections(function(error,count){
-        console.log('increase G connection = '+ count);
+		console.log(`gateway connected = [rport : ${gateway.remotePort}][nofc : ${count}]`);
     });
 
     gateway.setTimeout(10000);
@@ -116,15 +116,11 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.on('data', function(recvBuffer) {
 
-        console.log(`vvvvvvvvvvvvvvvvvvvvvvvvvvvv`);
-        console.log(recvBuffer.toString('hex'));
-        console.log(`----------------------------`);
         let clientPort = header.GetClientPort(recvBuffer);
 
         recvBuffer = header.Remove0Header(recvBuffer);
 
-        console.log('send server data to client: '+ clientPort +' // data length : '+recvBuffer.length);
-
+        console.log('[Server] Target Client: '+ clientPort +' // data length : '+recvBuffer.length);
         console.log(`[S] : ${recvBuffer.toString('hex')}`);
 
 		let target = clients.get(clientPort);
@@ -138,13 +134,13 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.on('error', function(err) {
 
-        console.log('Gateway Socket Error: '+ gateway.id + ":", JSON.stringify(err));
+        console.log('[SOCKET ERROR] Gateway id : '+ gateway.id + "\n   >> msg >> ", JSON.stringify(err));
 
     });
 
     gateway.on('timeout', function() {
 
-      console.log('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
+//      console.log('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
 //      gateway.end();
 
     });
@@ -176,20 +172,20 @@ gServer.listen(process.argv[3], function() {
     });
 
     gServer.on('error', function(err){
-        console.log('gServer Error: ', JSON.stringify(err));
+        console.log('[G SERVER ERROR] ', JSON.stringify(err));
     });
 });
 
 function writeData(socket, data){
 
     if(socket == NaN || socket == undefined){
-		console.log("Send to undefined socket");
+		console.log("[SOCKET ERROR] Send to undefined socket");
 		return;
     }
 
     let success = socket.write(data);
 
     if (!success){
-        console.log("Client Send Fail : "+data);
+        console.log("[SOCKET ERROR] Client Send Fail : \n    >> msg >> "+data);
     }
 }

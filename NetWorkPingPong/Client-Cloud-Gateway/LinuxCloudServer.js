@@ -58,7 +58,7 @@ let server = net_server.createServer(function(client) {
 
     client.on('error', function(err) {
 
-        log.Debug(`[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> ", JSON.stringify(err));
+        log.Debug(`[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
 
     });
 
@@ -78,7 +78,7 @@ let server = net_server.createServer(function(client) {
     client.on('close', function() {
 //      log.Debug('socket close ' + client.id + ':' + client.remotePort);
 		clients.delete(client.remotePort);
-		log.Debug(`clients size : `, clients.size);
+		log.Debug(`clients size : ${clients.size}`);
         server.getConnections(function(error,count){
 			log.Debug(`number of connection = `+ count);
 			if(count != clients.size) console.error(`Client map size error`)
@@ -96,7 +96,7 @@ server.listen(process.argv[2], function() {
     });
 
     server.on('error', function(err){
-        log.Debug(`[C SERVER ERROR] `, JSON.stringify(err));
+        log.Debug(`[C SERVER ERROR] ${JSON.stringify(err)}`);
     });
 });
 
@@ -136,7 +136,7 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.on('error', function(err) {
 
-        log.Debug(`[SOCKET ERROR] Gateway id : `, gateway.id + "\n   >> msg >> ", JSON.stringify(err));
+        log.Debug(`[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
 
     });
 
@@ -159,7 +159,7 @@ let gServer = gateway_server.createServer(function(gateway){
         gateways.splice(gateways.indexOf(gateway),1);
 
         gServer.getConnections(function(error,count){
-            log.Debug(`number of G connection = `,count);
+            log.Debug(`number of G connection = ${count}`);
         });
     });
 });
@@ -174,7 +174,7 @@ gServer.listen(process.argv[3], function() {
     });
 
     gServer.on('error', function(err){
-        log.Debug(`[G SERVER ERROR] `, JSON.stringify(err));
+        log.Debug(`[G SERVER ERROR] ${JSON.stringify(err)}`);
     });
 });
 

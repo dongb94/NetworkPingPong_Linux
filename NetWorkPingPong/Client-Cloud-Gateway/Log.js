@@ -3,5 +3,5 @@
 let time = new Date();
 
 exports.Debug = function(string){
-    console.log(`[${time.toTimeString}]${string}`);
+    console.log(`[${Date()}]${string}`);
 }

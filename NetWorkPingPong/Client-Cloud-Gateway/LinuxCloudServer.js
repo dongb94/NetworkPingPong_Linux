@@ -1,7 +1,10 @@
 let fillter = require('./packetFiltering.js');
 let header = require('./packetHeader.js');
+let log = require('./Log.js');
+
 let net_server = require('net');
 let gateway_server = require('net');
+
 
 let max_n_of_client = 500;
 let max_n_of_gateway = 20;
@@ -18,12 +21,12 @@ let server = net_server.createServer(function(client) {
     client.id = clientIndex++;
     temp = client.remotePort;
 
-//    console.log('Client connection: ' + client.localAddress  + ":" + client.remotePort);
-//    console.log('   local = %s:%s', client.localAddress, client.localPort);
-//    console.log('   remote = %s:%s', client.remoteAddress, client.remotePort);
+//    log.Debug(`Client connection: ` + client.localAddress  + ":" + client.remotePort);
+//    log.Debug('   local = %s:%s', client.localAddress, client.localPort);
+//    log.Debug('   remote = %s:%s', client.remoteAddress, client.remotePort);
 
     server.getConnections(function(error,count){
-        console.log(`C conn [rport : ${client.remotePort}][nofc : ${count}]`);
+        log.Debug(`C conn [rport : ${client.remotePort}][nofc : ${count}]`);
     });
 
     client.setTimeout(10000);
@@ -31,8 +34,6 @@ let server = net_server.createServer(function(client) {
     clients.set(client.remotePort, client);
 
     client.on('data', function(recvBuffer) {
-
-//      writeData(client, 'Send: ' + data.toString()  + ' to ' +client.id.toString());
 
         if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
             return;
@@ -42,59 +43,60 @@ let server = net_server.createServer(function(client) {
             recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
         }
 
-		console.log('[Client] data.length : ' + recvBuffer.length);
-		console.log(`[C] : ${recvBuffer.toString('hex')}`);
+		log.Debug(`[Client] data.length : ` + recvBuffer.length);
+		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 
         if(gateways.length == 0){
-            console.log('[ERROR] no gateway connected');
+            log.Debug(`[ERROR] no gateway connected`);
         }
         else{
             let gwIndex = client.id % gateways.length;
-            console.log(gwIndex + "/" + gateways.length);
+            log.Debug(gwIndex + "/" + gateways.length);
             writeData(gateways[gwIndex], recvBuffer);
         }
     });
 
     client.on('error', function(err) {
 
-        console.log('[SOCKET ERROR] Client id: '+ client.id + "\n   >> msg >> ", JSON.stringify(err));
+        log.Debug(`[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> ", JSON.stringify(err));
 
     });
 
     client.on('timeout', function() {
 
-//        console.log('Socket Timed out ' + client.id + ':' + client.remotePort);
+//        log.Debug('Socket Timed out ' + client.id + ':' + client.remotePort);
 //        client.end();
 
     });
 
     client.on('end', function() {
 
-//      console.log('Client disconnected ' + client.id + ':' + client.remotePort);
+//      log.Debug('Client disconnected ' + client.id + ':' + client.remotePort);
 
     });
 
     client.on('close', function() {
-//      console.log('socket close ' + client.id + ':' + client.remotePort);
+//      log.Debug('socket close ' + client.id + ':' + client.remotePort);
+		clients.delete(client.remotePort);
+		log.Debug(`clients size : `, clients.size);
         server.getConnections(function(error,count){
-                console.log('number of connection = '+ count);
+			log.Debug(`number of connection = `+ count);
+			if(count != clients.size) console.error(`Client map size error`)
         });
-        clients.delete(client.remotePort);
-        console.log('clients size : ' + clients.size);
     });
 });
 
 server.maxConnections = max_n_of_client;
 server.listen(process.argv[2], function() {
 
-    console.log('Server listening: ' + JSON.stringify(server.address()));
+    log.Debug(`Server listening: ` + JSON.stringify(server.address()));
 
     server.on('close', function(){
-        console.log('Server Terminated');
+        log.Debug(`Server Terminated`);
     });
 
     server.on('error', function(err){
-        console.log('[C SERVER ERROR] ', JSON.stringify(err));
+        log.Debug(`[C SERVER ERROR] `, JSON.stringify(err));
     });
 });
 
@@ -102,12 +104,12 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.id = gatewayIndex++;
 
-//    console.log('Gateway connection: ' + gateway.localAddress  + ":" + gateway.remotePort);
-//    console.log('   local = %s:%s', gateway.localAddress, gateway.localPort);
-//    console.log('   remote = %s:%s', gateway.remoteAddress, gateway.remotePort);
+//    log.Debug('Gateway connection: ' + gateway.localAddress  + ":" + gateway.remotePort);
+//    log.Debug('   local = %s:%s', gateway.localAddress, gateway.localPort);
+//    log.Debug('   remote = %s:%s', gateway.remoteAddress, gateway.remotePort);
 
     gServer.getConnections(function(error,count){
-		console.log(`G conn [rport : ${gateway.remotePort}][nofc : ${count}]`);
+		log.Debug(`G conn [rport : ${gateway.remotePort}][nofc : ${count}]`);
     });
 
     gateway.setTimeout(10000);
@@ -118,14 +120,14 @@ let gServer = gateway_server.createServer(function(gateway){
 
         let clientPort = header.GetClientPort(recvBuffer);
 
-        recvBuffer = header.Remove0Header(recvBuffer);
+		recvBuffer = header.Remove0Header(recvBuffer);
 
-        console.log('[Server] Target Client: '+ clientPort +' // data length : '+recvBuffer.length);
-        console.log(`[S] : ${recvBuffer.toString('hex')}`);
+		log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
+		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 
 		let target = clients.get(clientPort);
 		if(target == undefined) {
-			console.log('target client was disconnected');
+			log.Debug('target client was disconnected');
 			return;
 		}
 
@@ -134,30 +136,30 @@ let gServer = gateway_server.createServer(function(gateway){
 
     gateway.on('error', function(err) {
 
-        console.log('[SOCKET ERROR] Gateway id : '+ gateway.id + "\n   >> msg >> ", JSON.stringify(err));
+        log.Debug(`[SOCKET ERROR] Gateway id : `, gateway.id + "\n   >> msg >> ", JSON.stringify(err));
 
     });
 
     gateway.on('timeout', function() {
 
-//      console.log('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
+//      log.Debug('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
 //      gateway.end();
 
     });
 
     gateway.on('end', function() {
 
-//      console.log('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
+//      log.Debug('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
 
     });
 
     gateway.on('close', function() {
-//      console.log('Gateway close :: ' + gateway.id + ':' + gateway.remotePort);
+//      log.Debug('Gateway close :: ' + gateway.id + ':' + gateway.remotePort);
 
         gateways.splice(gateways.indexOf(gateway),1);
 
         gServer.getConnections(function(error,count){
-            console.log('number of G connection = '+ count);
+            log.Debug(`number of G connection = `,count);
         });
     });
 });
@@ -165,27 +167,27 @@ let gServer = gateway_server.createServer(function(gateway){
 gServer.maxConnections = max_n_of_gateway;
 gServer.listen(process.argv[3], function() {
 
-    console.log('gServer listening: ' + JSON.stringify(gServer.address()));
+    log.Debug('gServer listening: ' + JSON.stringify(gServer.address()));
 
     gServer.on('close', function(){
-        console.log('gServer Terminated');
+        log.Debug(`gServer Terminated`);
     });
 
     gServer.on('error', function(err){
-        console.log('[G SERVER ERROR] ', JSON.stringify(err));
+        log.Debug(`[G SERVER ERROR] `, JSON.stringify(err));
     });
 });
 
 function writeData(socket, data){
 
     if(socket == NaN || socket == undefined){
-		console.log("[SOCKET ERROR] Send to undefined socket");
+		log.Debug(`[SOCKET ERROR] Send to undefined socket`);
 		return;
     }
 
     let success = socket.write(data);
 
     if (!success){
-        console.log("[SOCKET ERROR] Client Send Fail : \n    >> msg >> "+data);
+        log.Debug(`[SOCKET ERROR] Client Send Fail : \n    >> msg >> `+data);
     }
 }

@@ -11,7 +11,7 @@ exports.CheckMagicNumber = function(recvBuffer = new Buffer(), remotePort){
 
 	if(MAGIC_NUMBER.compare(recvBuffer, 0, 8) != 0 ){
 		let packet = recvBuffer.readIntLE(0,8);
-		console.log('[Packet Error] Magic Number does not match : ' + packet.toString(16));
+		console.log(`[Packet Error][${remotePort}] Magic Number does not match : ` + packet.toString(16));
 		return false;
 	}
 
@@ -26,4 +26,3 @@ exports.GetPortNum = function(recvBuffer = new Buffer){
 	console.log('[PortNum] 0x' + recvBuffer.readInt16BE(Header_1st_Size + 20).toString(16) + "");
 	return recvBuffer.readInt16BE(Header_1st_Size + 20);
 }
-

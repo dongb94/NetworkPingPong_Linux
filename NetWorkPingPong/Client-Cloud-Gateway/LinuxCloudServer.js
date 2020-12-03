@@ -5,7 +5,6 @@ let log = require('./Log.js');
 let net_server = require('net');
 let gateway_server = require('net');
 
-
 let max_n_of_client = 500;
 let max_n_of_gateway = 20;
 
@@ -14,19 +13,16 @@ let gatewayIndex = 0;
 let clients = new Map();
 let gateways = [];
 
-let temp = 0;
-
 let server = net_server.createServer(function(client) {
 
     client.id = clientIndex++;
-    temp = client.remotePort;
 
 //    log.Debug(`Client connection: ` + client.localAddress  + ":" + client.remotePort);
 //    log.Debug('   local = %s:%s', client.localAddress, client.localPort);
 //    log.Debug('   remote = %s:%s', client.remoteAddress, client.remotePort);
 
     server.getConnections(function(error,count){
-        log.Debug(`C conn [rport : ${client.remotePort}][nofc : ${count}]`);
+		log.Debug(`C conn [${client.id}][rport : ${client.remotePort}][nofc : ${count}]\n   [LocalAddress : ${client.localAddress}][RemoteAddress : ${client.remoteAddress}]`);
     });
 
     client.setTimeout(10000);
@@ -57,22 +53,16 @@ let server = net_server.createServer(function(client) {
     });
 
     client.on('error', function(err) {
-
         log.Debug(`[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
-
     });
 
     client.on('timeout', function() {
-
 //        log.Debug('Socket Timed out ' + client.id + ':' + client.remotePort);
 //        client.end();
-
     });
 
     client.on('end', function() {
-
 //      log.Debug('Client disconnected ' + client.id + ':' + client.remotePort);
-
     });
 
     client.on('close', function() {
@@ -135,27 +125,20 @@ let gServer = gateway_server.createServer(function(gateway){
     });
 
     gateway.on('error', function(err) {
-
         log.Debug(`[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
-
     });
 
     gateway.on('timeout', function() {
-
 //      log.Debug('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
 //      gateway.end();
-
     });
 
     gateway.on('end', function() {
-
 //      log.Debug('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
-
     });
 
     gateway.on('close', function() {
 //      log.Debug('Gateway close :: ' + gateway.id + ':' + gateway.remotePort);
-
         gateways.splice(gateways.indexOf(gateway),1);
 
         gServer.getConnections(function(error,count){

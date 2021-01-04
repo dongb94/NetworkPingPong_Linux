@@ -45,7 +45,7 @@ exports.RemoveHeader = function(buffer = Buffer){
 const Header0Size = 8;
 exports.Header0Size = Header0Size;
 
-exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
+exports.Create0Header = function(clientBuffer = new Buffer, clientPort){
 
     let header0 = Buffer.alloc(Header0Size);
 
@@ -54,15 +54,19 @@ exports.Create0Header = function(recvBuffer = new Buffer, clientPort){
 	offset = header0.writeUInt16LE(0x00, offset);			// C_PORT_CLOUD linux msg id
 	offset = header0.writeUInt32LE(0x00, offset);
 
-	const newBuffer = Buffer.concat([header0,recvBuffer], Header0Size + recvBuffer.length);
+	const newBuffer = Buffer.concat([header0,clientBuffer], Header0Size + clientBuffer.length);
 
 	return newBuffer;
 }
 
-exports.Remove0Header = function(sendBuffer = new Buffer){
-    return sendBuffer.slice(Header0Size);
+exports.Remove0Header = function(gatewayBuffer = new Buffer){
+    return gatewayBuffer.slice(Header0Size);
 }
 
-exports.GetClientPort = function(sendBuffer = new Buffer){
-	return sendBuffer.readUInt16LE(0);
+exports.GetClientPort = function(gatewayBuffer = new Buffer){
+	return gatewayBuffer.readUInt16LE(0);
+}
+
+exports.GetPacketSize = function(gatewayBuffer = new Buffer){
+    return gatewayBuffer.readUInt16LE(32);
 }

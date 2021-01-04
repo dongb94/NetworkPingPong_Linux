@@ -68,5 +68,5 @@ exports.GetClientPort = function(gatewayBuffer = new Buffer){
 }
 
 exports.GetPacketSize = function(gatewayBuffer = new Buffer){
-    return gatewayBuffer.readUInt16LE(32);
+    return gatewayBuffer.readUInt16LE(64*3);
 }

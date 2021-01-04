@@ -133,10 +133,10 @@ let gServer = gateway_server.createServer(function(gateway){
 			recvBuffer = header.Remove0Header(recvBuffer);
 			
 			log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
-
 		}
 
 		let packetSize = header.GetPacketSize(recvBuffer);
+		log.Debug(`Packet length : ${packetSize}`);
 		if(packetSize > Buffer.length){
 			tempBuffers[gateway.id] = recvBuffer;
 			tempPorts[gateway.id] = clientPort;

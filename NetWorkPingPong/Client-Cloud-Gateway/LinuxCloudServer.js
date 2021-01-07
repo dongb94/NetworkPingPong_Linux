@@ -113,31 +113,32 @@ let gServer = gateway_server.createServer(function(gateway){
 
 	gateway.on('data', function(recvBuffer) {
 
+		let clientPort;
+
 		if(tempBuffers[gateway.id] != null) {
 			let tempBuffer = tempBuffers[gateway.id];
 
 			recvBuffer = Buffer.concat([tempBuffer, recvBuffer], tempBuffer.length+ recvBuffer.length);
 
-			let tempPort = tempPorts[gateway.id];
+			clientPort = tempPorts[gateway.id];
 
-			log.Debug(`[Server] Target Client: ${tempPort} // com data length : ${recvBuffer.length}`);
+			log.Debug(`[Server] Target Client: ${clientPort} // com data length : ${recvBuffer.length}`);
 			log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 
 			tempBuffers[gateway.id] = null;
 		}
 		else {
-			let clientPort = header.GetClientPort(recvBuffer);
+			clientPort = header.GetClientPort(recvBuffer);
 
+			log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
 			log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 
 			recvBuffer = header.Remove0Header(recvBuffer);
-			
-			log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
 		}
 
 		let packetSize = header.GetPacketSize(recvBuffer);
-		log.Debug(`Packet length : ${packetSize}`);
-		if(packetSize > Buffer.length){
+		if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
+			log.Debug(`msg origin length : ${packetSize}, recv msg length : ${recvBuffer.length}`);
 			tempBuffers[gateway.id] = recvBuffer;
 			tempPorts[gateway.id] = clientPort;
 			return;

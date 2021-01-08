@@ -136,6 +136,10 @@ let gServer = gateway_server.createServer(function(gateway){
 			recvBuffer = header.Remove0Header(recvBuffer);
 		}
 
+		// 서버에서 잘못 된 데이터가 오면 사이즈를 가져오다 에러남
+		if(recvBuffer.length < header.HeaderSize) {
+			log.Debug(`Server msg length too short [len : ${recvBuffer.length}]`);
+		}
 		let packetSize = header.GetPacketSize(recvBuffer);
 		if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
 			log.Debug(`msg origin length : ${packetSize}, recv msg length : ${recvBuffer.length}`);

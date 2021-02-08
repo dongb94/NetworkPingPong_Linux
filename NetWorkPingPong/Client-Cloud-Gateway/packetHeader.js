@@ -68,5 +68,9 @@ exports.GetClientPort = function(gatewayBuffer = new Buffer){
 }
 
 exports.GetPacketSize = function(gatewayBuffer = new Buffer){
+    
+    if(gatewayBuffer.length < HeaderSize)
+        return -1;
+
     return gatewayBuffer.readUInt16LE(24); // read 16bit from 24byte offset
 }

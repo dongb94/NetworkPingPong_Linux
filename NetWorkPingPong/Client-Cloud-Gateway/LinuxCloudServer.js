@@ -36,10 +36,12 @@ let server = net_server.createServer(function(client) {
 
 	client.on('data', function(recvBuffer) {
 
-		log.Debug(`[Client] rport : ${client.remotePort} // data.length : ` + recvBuffer.length);
-		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+		// log.Debug(`[Client] rport : ${client.remotePort} // data.length : ` + recvBuffer.length);
+		// log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 
 		if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
+			log.Debug(`[Client MagicNumber Error] remote Address : ${client.remoteAddress}, local Address : ${client.localAddress}, local port : ${client.localPort}`);
+			log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 			return;
 		}
 		else
@@ -73,10 +75,10 @@ let server = net_server.createServer(function(client) {
 	client.on('close', function() {
 //		log.Debug('socket close ' + client.id + ':' + client.remotePort);
 		clients.delete(client.remotePort);
-		log.Debug(`clients size : ${clients.size}`);
+		log.Debug(`[Disconnect ${client.remotePort}] clients size : ${clients.size}`);
 		server.getConnections(function(error,count){
-			log.Debug(`number of connection = `+ count);
-			if(count != clients.size) console.error(`Client map size error`)
+			if(count != clients.size)
+				log.Debug(`Client map size error [nOfCon : ${count}][mapSize : ${clients.size}]`);
 		});
 	});
 });
@@ -112,51 +114,7 @@ let gServer = gateway_server.createServer(function(gateway){
 	gateways.push(gateway);
 
 	gateway.on('data', function(recvBuffer) {
-
-		let clientPort;
-
-		if(tempBuffers[gateway.id] != null) {
-			let tempBuffer = tempBuffers[gateway.id];
-
-			recvBuffer = Buffer.concat([tempBuffer, recvBuffer], tempBuffer.length+ recvBuffer.length);
-
-			clientPort = tempPorts[gateway.id];
-
-			log.Debug(`[Server] Target Client: ${clientPort} // com data length : ${recvBuffer.length}`);
-			log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
-
-			tempBuffers[gateway.id] = null;
-		}
-		else {
-			clientPort = header.GetClientPort(recvBuffer);
-
-			log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
-			log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
-
-			recvBuffer = header.Remove0Header(recvBuffer);
-		}
-
-		// 서버에서 잘못 된 데이터가 오면 사이즈를 가져오다 에러남. 패킷
-		if(recvBuffer.length < header.HeaderSize) {
-			log.Debug(`Server msg length too short [len : ${recvBuffer.length}]`);
-			return;
-		}
-
-		let packetSize = header.GetPacketSize(recvBuffer);
-		if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
-			log.Debug(`msg origin length : ${packetSize}, recv msg length : ${recvBuffer.length}`);
-			tempBuffers[gateway.id] = recvBuffer;
-			tempPorts[gateway.id] = clientPort;
-			return;
-		}
-
-		let target = clients.get(clientPort);
-		if(target == undefined) {
-			log.Debug('target client was disconnected');
-			return;
-		}
-
-		writeData(clients.get(clientPort), recvBuffer);
+		checkAndSendServerMsg(gateway, recvBuffer);
 	});
 
 	gateway.on('error', function(err) {
@@ -208,4 +166,73 @@ function writeData(socket, data){
 	if (!success){
 		log.Debug(`[SOCKET ERROR] Client Send Fail : \n	>> msg >> `+data);
 	}
+}
+
+function checkAndSendServerMsg(gateway, recvBuffer) {
+	
+	let clientPort;
+
+	if(tempBuffers[gateway.id] != null) {
+		let tempBuffer = tempBuffers[gateway.id];
+
+		recvBuffer = Buffer.concat([tempBuffer, recvBuffer], tempBuffer.length+ recvBuffer.length);
+
+		clientPort = tempPorts[gateway.id];
+
+		// log.Debug(`[Server] Target Client: ${clientPort} // com data length : ${recvBuffer.length}`);
+
+		tempBuffers[gateway.id] = null;
+	}
+	else {
+		if(recvBuffer.length < header.Header0Size){ // zero Header 보다 짧은 패킷은 소실된다.
+			log.Debug(`Server msg length too short [len : ${recvBuffer.length}]`);
+			log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+			return;
+		}
+
+		clientPort = header.GetClientPort(recvBuffer);
+
+		// log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
+
+		recvBuffer = header.Remove0Header(recvBuffer);
+	}
+
+	if(clients.get(clientPort)==undefined) { // 접속이 끊긴 클라이언트로 보내지는 패킷
+		// log.Debug(`target client [${clientPort}] was disconnected`);
+		return;
+	}
+
+	// 헤더 사이즈 보다 받은 데이터가 작은 경우
+	if(recvBuffer.length < header.HeaderSize) {
+		log.Debug(`Server msg length is shorter than header size [len : ${recvBuffer.length}]`);
+		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+		tempBuffers[gateway.id] = recvBuffer;
+		tempPorts[gateway.id] = clientPort;
+		return;
+	}
+
+	let tempBuffer;
+	let packetSize = header.GetPacketSize(recvBuffer);
+	if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
+		log.Debug(`[S][Separate packet] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
+		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+		tempBuffers[gateway.id] = recvBuffer;
+		tempPorts[gateway.id] = clientPort;
+		return;
+	}
+	else if(packetSize < recvBuffer.length) // 패킷이 더 긴 경우 (뒤 쪽 패킷이 붙어서 오는 경우)
+	{
+		log.Debug(`[S][Attached packet] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
+		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+		
+		// tempBuffer = 뒤쪽 패킷, recvBuffer = 앞쪽 패킷
+		tempBuffer = recvBuffer.slice(packetSize);
+		recvBuffer = recvBuffer.slice(0, packetSize);
+
+		log.Debug(`[pre] : ${recvBuffer.toString('hex')}\n [next] : ${tempBuffer.toString('hex')}`);
+
+		checkAndSendServerMsg(gateway, tempBuffer);
+	}
+	
+	writeData(clients.get(clientPort), recvBuffer);
 }

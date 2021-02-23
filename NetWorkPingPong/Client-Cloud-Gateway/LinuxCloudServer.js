@@ -35,28 +35,7 @@ let server = net_server.createServer(function(client) {
 	clients.set(client.remotePort, client);
 
 	client.on('data', function(recvBuffer) {
-
-		// log.Debug(`[Client] rport : ${client.remotePort} // data.length : ` + recvBuffer.length);
-		// log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
-
-		if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
-			log.Debug(`[Client MagicNumber Error] remote Address : ${client.remoteAddress}, local Address : ${client.localAddress}, local port : ${client.localPort}`);
-			log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
-			return;
-		}
-		else
-		{
-			recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
-		}
-
-		if(gateways.length == 0){
-			log.Debug(`[ERROR] no gateway connected`);
-		}
-		else{
-			let gwIndex = client.id % gateways.length;
-			log.Debug(gwIndex + "/" + gateways.length);
-			writeData(gateways[gwIndex], recvBuffer);
-		}
+		checkAndRecvClientMsg(client, recvBuffer);
 	});
 
 	client.on('error', function(err) {
@@ -168,6 +147,56 @@ function writeData(socket, data){
 	}
 }
 
+function checkAndRecvClientMsg(client, recvBuffer) {
+	
+	// log.Debug(`[Client] rport : ${client.remotePort} // data.length : ` + recvBuffer.length);
+	// log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+	if(tempBuffers[client]!=null)
+	{
+		recvBuffer = Buffer.concat([tempBuffers[client], recvBuffer], tempBuffers[client].length + recvBuffer.length);
+		tempBuffers[client] = null;
+	}
+
+	if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
+		log.Debug(`[Client MagicNumber Error] remote[${client.remotePort}][${client.remoteAddress}], local[${client.localPort}][${client.localAddress}]`);
+		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+		return;
+	}
+
+	let size = header.GetPacketSize(recvBuffer);
+	if(size > recvBuffer.length)
+	{
+		log.Debug(`[Client recv buffer size is short] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
+		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+		tempBuffers[client] = recvBuffer;
+		return;
+	}
+	else if(size < recvBuffer.length)
+	{
+		log.Debug(`[Client recv buffer size is long] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
+		let buffer = recvBuffer.slice(size);
+		recvBuffer = recvBuffer.slice(0,size);
+
+		log.Debug(`[L] : ${recvBuffer.toString('hex')}\n[R] : ${buffer.toString('hex')}`);
+
+		if(buffer.length > header.HeaderSize)
+		{
+			checkAndRecvClientMsg(client, buffer);
+		}
+	}
+
+	recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
+
+	if(gateways.length == 0){
+		log.Debug(`[ERROR] no gateway connected`);
+	}
+	else{
+		let gwIndex = client.id % gateways.length;
+		// log.Debug(gwIndex + "/" + gateways.length);
+		writeData(gateways[gwIndex], recvBuffer);
+	}
+}
+
 function checkAndSendServerMsg(gateway, recvBuffer) {
 	
 	let clientPort;
@@ -223,7 +252,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 	else if(packetSize < recvBuffer.length) // 패킷이 더 긴 경우 (뒤 쪽 패킷이 붙어서 오는 경우)
 	{
 		log.Debug(`[S][Attached packet] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
-		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+		// log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		
 		// tempBuffer = 뒤쪽 패킷, recvBuffer = 앞쪽 패킷
 		tempBuffer = recvBuffer.slice(packetSize);

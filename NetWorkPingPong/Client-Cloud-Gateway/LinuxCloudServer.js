@@ -163,6 +163,8 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 		return;
 	}
 
+	let hasSlicedBuffer = false;
+	let buffer;
 	let size = header.GetPacketSize(recvBuffer);
 	if(size > recvBuffer.length)
 	{
@@ -174,14 +176,18 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 	else if(size < recvBuffer.length)
 	{
 		log.Debug(`[Client recv buffer size is long] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
-		let buffer = recvBuffer.slice(size);
+		buffer = recvBuffer.slice(size);
 		recvBuffer = recvBuffer.slice(0,size);
 
 		log.Debug(`[L] : ${recvBuffer.toString('hex')}\n[R] : ${buffer.toString('hex')}`);
 
 		if(buffer.length > header.HeaderSize)
 		{
-			checkAndRecvClientMsg(client, buffer);
+			hasSlicedBuffer = true;
+		}
+		else
+		{
+			tempBuffers[client] = buffer;
 		}
 	}
 
@@ -195,6 +201,8 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 		// log.Debug(gwIndex + "/" + gateways.length);
 		writeData(gateways[gwIndex], recvBuffer);
 	}
+
+	if(hasSlicedBuffer) checkAndRecvClientMsg(client, buffer);
 }
 
 function checkAndSendServerMsg(gateway, recvBuffer) {
@@ -240,6 +248,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 		return;
 	}
 
+	let hasSlicedBuffer = false;
 	let tempBuffer;
 	let packetSize = header.GetPacketSize(recvBuffer);
 	if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
@@ -260,8 +269,10 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 
 		log.Debug(`[pre] : ${recvBuffer.toString('hex')}\n [next] : ${tempBuffer.toString('hex')}`);
 
-		checkAndSendServerMsg(gateway, tempBuffer);
+		hasSlicedBuffer = true;
 	}
 	
 	writeData(clients.get(clientPort), recvBuffer);
+
+	if(hasSlicedBuffer) checkAndSendServerMsg(gateway, tempBuffer);
 }

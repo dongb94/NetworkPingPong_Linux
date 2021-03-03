@@ -179,7 +179,7 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 		buffer = recvBuffer.slice(size);
 		recvBuffer = recvBuffer.slice(0,size);
 
-		log.Debug(`[L] : ${recvBuffer.toString('hex')}\n[R] : ${buffer.toString('hex')}`);
+		// log.Debug(`[L] : ${recvBuffer.toString('hex')}\n[R] : ${buffer.toString('hex')}`);
 
 		if(buffer.length > header.HeaderSize)
 		{
@@ -234,14 +234,9 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 		recvBuffer = header.Remove0Header(recvBuffer);
 	}
 
-	if(clients.get(clientPort)==undefined) { // 접속이 끊긴 클라이언트로 보내지는 패킷
-		// log.Debug(`target client [${clientPort}] was disconnected`);
-		return;
-	}
-
 	// 헤더 사이즈 보다 받은 데이터가 작은 경우
 	if(recvBuffer.length < header.HeaderSize) {
-		log.Debug(`Server msg length is shorter than header size [len : ${recvBuffer.length}]`);
+		log.Debug(`[S][Shorter than Header packet] [target ${clientPort}] [len : ${recvBuffer.length}]`);
 		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[gateway.id] = recvBuffer;
 		tempPorts[gateway.id] = clientPort;
@@ -252,27 +247,32 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 	let tempBuffer;
 	let packetSize = header.GetPacketSize(recvBuffer);
 	if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
-		log.Debug(`[S][Separate packet] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
-		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+		log.Debug(`[S][Separate packet] [target ${clientPort}] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
+		// log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[gateway.id] = recvBuffer;
 		tempPorts[gateway.id] = clientPort;
 		return;
 	}
 	else if(packetSize < recvBuffer.length) // 패킷이 더 긴 경우 (뒤 쪽 패킷이 붙어서 오는 경우)
 	{
-		log.Debug(`[S][Attached packet] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
+		log.Debug(`[S][Attached packet] [target ${clientPort}] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
 		// log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		
 		// tempBuffer = 뒤쪽 패킷, recvBuffer = 앞쪽 패킷
 		tempBuffer = recvBuffer.slice(packetSize);
 		recvBuffer = recvBuffer.slice(0, packetSize);
 
-		log.Debug(`[pre] : ${recvBuffer.toString('hex')}\n [next] : ${tempBuffer.toString('hex')}`);
+		// log.Debug(`[pre] : ${recvBuffer.toString('hex')}\n [next] : ${tempBuffer.toString('hex')}`);
 
 		hasSlicedBuffer = true;
 	}
-	
-	writeData(clients.get(clientPort), recvBuffer);
+
+	if(clients.get(clientPort)==undefined) { // 접속이 끊긴 클라이언트로 보내지는 패킷은 처리 하지 않는다.
+		// log.Debug(`target client [${clientPort}] was disconnected`);
+	}
+	else {
+		writeData(clients.get(clientPort), recvBuffer);
+	}
 
 	if(hasSlicedBuffer) checkAndSendServerMsg(gateway, tempBuffer);
 }

@@ -40,6 +40,7 @@ let server = net_server.createServer(function(client) {
 
 	client.on('error', function(err) {
 		log.Debug(`\n\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 	});
 
 	client.on('timeout', function() {
@@ -97,7 +98,11 @@ let gServer = gateway_server.createServer(function(gateway){
 	});
 
 	gateway.on('error', function(err) {
-		log.Debug(`[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Debug(`\n[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
+		if(err.message == 'read ETIMEDOUT') {
+			gateway.end();
+		}
 	});
 
 	gateway.on('timeout', function() {

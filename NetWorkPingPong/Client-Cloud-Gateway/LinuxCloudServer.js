@@ -41,6 +41,9 @@ let server = net_server.createServer(function(client) {
 	client.on('error', function(err) {
 		log.Debug(`\n\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
 		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
+		if(err.message == 'read ETIMEDOUT') {
+			gateway.end();
+		}
 	});
 
 	client.on('timeout', function() {
@@ -60,6 +63,9 @@ let server = net_server.createServer(function(client) {
 			if(count != clients.size)
 				log.Debug(`Client map size error [nOfCon : ${count}][mapSize : ${clients.size}]`);
 		});
+
+		let buffer = header.CreateDisconnectHeader();
+		checkAndRecvClientMsg(client, buffer);
 	});
 });
 

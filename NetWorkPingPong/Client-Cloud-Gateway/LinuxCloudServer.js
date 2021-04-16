@@ -42,7 +42,7 @@ let server = net_server.createServer(function(client) {
 		log.Debug(`\n\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
 		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
-			gateway.end();
+			client.end();
 		}
 	});
 

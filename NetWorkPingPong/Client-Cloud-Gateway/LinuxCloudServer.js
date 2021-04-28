@@ -238,7 +238,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 			return;
 		}
 
-		clientPort = header.GetClientPort(recvBuffer);
+		clientPort = header.Zero_GetClientPort(recvBuffer);
 
 		// log.Debug(`[Server] Target Client: ${clientPort} // data length : ${recvBuffer.length}`);
 
@@ -278,11 +278,18 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 		hasSlicedBuffer = true;
 	}
 
-	if(clients.get(clientPort)==undefined) { // 접속이 끊긴 클라이언트로 보내지는 패킷은 처리 하지 않는다.
+	let client = clients.get(clientPort);
+	if(client==undefined) { // 접속이 끊긴 클라이언트로 보내지는 패킷은 처리 하지 않는다.
 		// log.Debug(`target client [${clientPort}] was disconnected`);
 	}
 	else {
-		writeData(clients.get(clientPort), recvBuffer);
+		writeData(client, recvBuffer);
+
+		let msgId = header.GetMsgId(recvBuffer);
+		if(msgId == -1 || msgId == 0x41)
+		{
+			client.end();
+		}
 	}
 
 	if(hasSlicedBuffer) checkAndSendServerMsg(gateway, tempBuffer);

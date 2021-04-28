@@ -93,14 +93,21 @@ exports.Remove0Header = function(gatewayBuffer = new Buffer){
     return gatewayBuffer.slice(Header0Size);
 }
 
-exports.GetClientPort = function(gatewayBuffer = new Buffer){
+exports.Zero_GetClientPort = function(gatewayBuffer = new Buffer){
 	return gatewayBuffer.readUInt16LE(0);
 }
 
 exports.GetPacketSize = function(gatewayBuffer = new Buffer){
-    
-    if(gatewayBuffer.length < HeaderSize)
-        return -1;
 
-    return gatewayBuffer.readUInt16LE(24); // read 16bit from 24byte offset
+	if(gatewayBuffer.length < HeaderSize)
+		return -1;
+
+	return gatewayBuffer.readUInt16LE(24); // read 16bit from 24byte offset
+}
+
+exports.GetMsgId = function(gatewayBuffer = new Buffer){
+	if(gatewayBuffer.length < HeaderSize)
+		return -1;
+
+	return gatewayBuffer.readUInt16LE(34); // read 16bit from 34byte offset
 }

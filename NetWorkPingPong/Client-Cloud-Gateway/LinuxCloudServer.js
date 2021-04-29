@@ -151,7 +151,7 @@ function writeData(socket, data){
 		return;
 	}
 
-	let success = socket.write(data);
+	let success = socket.write(data, function(err) {socket.end();});
 
 	if (!success){
 		log.Debug(`[SOCKET ERROR] Client Send Fail : \n	>> msg >> `+data);

@@ -1,6 +1,14 @@
 start :
 	make 0.open
 	make 1.open
+	make 2.open
+	make 3.open
+	make 4.open
+	make 5.open
+	make 6.open
+	make 7.open
+	make 8.open
+	make 9.open
 
 %.open : nodeJsRepeater.js
 	node nodeJsRepeater.js 300$* 301$* &

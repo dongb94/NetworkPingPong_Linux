@@ -27,10 +27,12 @@ let server = net_server.createServer(function(client) {
 //	log.Debug('   remote = %s:%s', client.remoteAddress, client.remotePort);
 
 	server.getConnections(function(error,count){
-		log.Debug(`C conn [${client.id}][rport : ${client.remotePort}][nofc : ${count}]\n   [LocalAddress : ${client.localAddress}][RemoteAddress : ${client.remoteAddress}]`);
+		log.Debug(`[${process.argv[2]}]C conn [${client.id}][rport : ${client.remotePort}][nofc : ${count}]\n   [LocalAddress : ${client.localAddress}][RemoteAddress : ${client.remoteAddress}]`);
 	});
 
-	client.setTimeout(10000);
+	client.setTimeout(20000);
+	client.setKeepAlive(true, 10000);
+	client.setNoDelay(true);
 
 	clients.set(client.remotePort, client);
 
@@ -39,7 +41,7 @@ let server = net_server.createServer(function(client) {
 	});
 
 	client.on('error', function(err) {
-		log.Debug(`\n\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Debug(`\n[${process.argv[2]}]\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
 		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			client.end();
@@ -48,17 +50,17 @@ let server = net_server.createServer(function(client) {
 
 	client.on('timeout', function() {
 //		log.Debug('Socket Timed out ' + client.id + ':' + client.remotePort);
-//		client.end();
+		//client.end();
 	});
 
-	client.on('end', function() {
-//		log.Debug('Client disconnected ' + client.id + ':' + client.remotePort);
-	});
+// 	client.on('end', function() {
+// //		log.Debug('Client disconnected ' + client.id + ':' + client.remotePort);
+// 	});
 
 	client.on('close', function() {
 //		log.Debug('socket close ' + client.id + ':' + client.remotePort);
 		clients.delete(client.remotePort);
-		log.Debug(`[Disconnect ${client.remotePort}] clients size : ${clients.size}`);
+		log.Debug(`[${process.argv[2]}][Disconnect ${client.remotePort}] clients size : ${clients.size}`);
 		server.getConnections(function(error,count){
 			if(count != clients.size)
 				log.Debug(`Client map size error [nOfCon : ${count}][mapSize : ${clients.size}]`);
@@ -75,7 +77,7 @@ server.listen(process.argv[2], function() {
 	log.Debug(`Server listening: ` + JSON.stringify(server.address()));
 
 	server.on('close', function(){
-		log.Debug(`Server Terminated`);
+		log.Debug(`|||||||||||||||||Server Terminated||||||||||||||||||||`);
 	});
 
 	server.on('error', function(err){
@@ -92,10 +94,12 @@ let gServer = gateway_server.createServer(function(gateway){
 //	log.Debug('   remote = %s:%s', gateway.remoteAddress, gateway.remotePort);
 
 	gServer.getConnections(function(error,count){
-		log.Debug(`G conn [rport : ${gateway.remotePort}][nofc : ${count}]`);
+		log.Debug(`[${process.argv[2]}]G conn [rport : ${gateway.remotePort}][nofc : ${count}]`);
 	});
 
-	gateway.setTimeout(10000);
+	gateway.setTimeout(20000);
+	gateway.setKeepAlive(true, 10000);
+	gateway.setNoDelay(true);
 
 	gateways.push(gateway);
 
@@ -104,7 +108,7 @@ let gServer = gateway_server.createServer(function(gateway){
 	});
 
 	gateway.on('error', function(err) {
-		log.Debug(`\n[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Debug(`\n[${process.argv[2]}]\t[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
 		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			gateway.end();
@@ -113,19 +117,19 @@ let gServer = gateway_server.createServer(function(gateway){
 
 	gateway.on('timeout', function() {
 //		log.Debug('Gateway Timed out ::  ' + gateway.id + ':' + gateway.remotePort);
-//		gateway.end();
+		//gateway.end();
 	});
 
-	gateway.on('end', function() {
-//		log.Debug('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
-	});
+// 	gateway.on('end', function() {
+// //		log.Debug('Gateway disconnected :: ' + gateway.id + ':' + gateway.remotePort);
+// 	});
 
 	gateway.on('close', function() {
 //		log.Debug('Gateway close :: ' + gateway.id + ':' + gateway.remotePort);
 		gateways.splice(gateways.indexOf(gateway),1);
 
 		gServer.getConnections(function(error,count){
-			log.Debug(`number of G connection = ${count}`);
+			log.Debug(`[${process.argv[2]}][Disconnect]number of G connection = ${count}`);
 		});
 	});
 });
@@ -136,7 +140,7 @@ gServer.listen(process.argv[3], function() {
 	log.Debug('gServer listening: ' + JSON.stringify(gServer.address()));
 
 	gServer.on('close', function(){
-		log.Debug(`gServer Terminated`);
+		log.Debug(`|||||||||||||||||gServer Terminated|||||||||||||||||`);
 	});
 
 	gServer.on('error', function(err){
@@ -147,14 +151,19 @@ gServer.listen(process.argv[3], function() {
 function writeData(socket, data){
 
 	if(socket == NaN || socket == undefined){
-		log.Debug(`[SOCKET ERROR] Send to undefined socket`);
+		log.Debug(`[${socket.localPort}][SOCKET ERROR] Send to undefined socket`);
 		return;
 	}
 
-	let success = socket.write(data, function(err) {socket.end();});
+	let success = socket.write(data);
+	// let success = socket.write(data, function(err) {
+	// 	log.Debug(`[${socket.localPort}][SOCKET ERROR][${socket.remotePort}] Send Fail`);
+	// 	if(socket.localPort < 3010)
+	// 		socket.end();
+	// });
 
 	if (!success){
-		log.Debug(`[SOCKET ERROR] Client Send Fail : \n	>> msg >> `+data);
+		log.Debug(`[${socket.localPort}][SOCKET ERROR] Send Fail : \n	>> msg >> `+data.toString('hex'));
 	}
 }
 
@@ -169,7 +178,7 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 	}
 
 	if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
-		log.Debug(`[Client MagicNumber Error] remote[${client.remotePort}][${client.remoteAddress}], local[${client.localPort}][${client.localAddress}]`);
+		log.Debug(`[${process.argv[2]}][Client MagicNumber Error] remote[${client.remotePort}][${client.remoteAddress}], local[${client.localPort}][${client.localAddress}]`);
 		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 		return;
 	}
@@ -179,14 +188,14 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 	let size = header.GetPacketSize(recvBuffer);
 	if(size > recvBuffer.length)
 	{
-		log.Debug(`[Client recv buffer size is short] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
+		log.Debug(`[${process.argv[2]}][Client recv buffer size is short] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
 		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[client] = recvBuffer;
 		return;
 	}
 	else if(size < recvBuffer.length)
 	{
-		log.Debug(`[Client recv buffer size is long] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
+		// log.Debug(`[Client recv buffer size is long] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
 		buffer = recvBuffer.slice(size);
 		recvBuffer = recvBuffer.slice(0,size);
 
@@ -205,7 +214,7 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 	recvBuffer = header.Create0Header(recvBuffer, client.remotePort);
 
 	if(gateways.length == 0){
-		log.Debug(`[ERROR] no gateway connected`);
+		log.Debug(`[${process.argv[2]}][ERROR] no gateway connected`);
 	}
 	else{
 		let gwIndex = client.id % gateways.length;
@@ -233,7 +242,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 	}
 	else {
 		if(recvBuffer.length < header.Header0Size){ // zero Header 보다 짧은 패킷은 소실된다.
-			log.Debug(`Server msg length too short [len : ${recvBuffer.length}]`);
+			log.Debug(`[${process.argv[2]}]Server msg length too short [len : ${recvBuffer.length}]`);
 			log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 			return;
 		}
@@ -247,7 +256,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 
 	// 헤더 사이즈 보다 받은 데이터가 작은 경우
 	if(recvBuffer.length < header.HeaderSize) {
-		log.Debug(`[S][Shorter than Header packet] [target ${clientPort}] [len : ${recvBuffer.length}]`);
+		log.Debug(`[${process.argv[2]}][S][Shorter than Header packet] [target ${clientPort}] [len : ${recvBuffer.length}]`);
 		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[gateway.id] = recvBuffer;
 		tempPorts[gateway.id] = clientPort;
@@ -258,7 +267,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 	let tempBuffer;
 	let packetSize = header.GetPacketSize(recvBuffer);
 	if(packetSize > recvBuffer.length){ // 패킷이 잘려서 전송된 경우. (separate packet)
-		log.Debug(`[S][Separate packet] [target ${clientPort}] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
+		// log.Debug(`[S][Separate packet] [target ${clientPort}] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
 		// log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[gateway.id] = recvBuffer;
 		tempPorts[gateway.id] = clientPort;
@@ -266,7 +275,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 	}
 	else if(packetSize < recvBuffer.length) // 패킷이 더 긴 경우 (뒤 쪽 패킷이 붙어서 오는 경우)
 	{
-		log.Debug(`[S][Attached packet] [target ${clientPort}] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
+		// log.Debug(`[S][Attached packet] [target ${clientPort}] origin length : ${packetSize}, recv length : ${recvBuffer.length}`);
 		// log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		
 		// tempBuffer = 뒤쪽 패킷, recvBuffer = 앞쪽 패킷
@@ -288,6 +297,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 		let msgId = header.GetMsgId(recvBuffer);
 		if(msgId == -1 || msgId == 0x41)
 		{
+			log.Debug(`[${process.argv[2]}]Disconnect Client [${clientPort}][${msgId}]`);
 			client.end();
 		}
 	}

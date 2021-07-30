@@ -34,7 +34,7 @@ exports.CheckPacketHeader = function(recvBuffer = new Buffer(), remotePort){
 	}
 
 	value = recvBuffer.readIntLE(Header_1st_Size + 2, 2); // Msg ID
-	if(value != 0)
+	if(value == 0)
 	{
 		console.log(`[Packet Error][${remotePort}] MsgID is 0 : 0x${value.toString(16)}`);
 		return false;

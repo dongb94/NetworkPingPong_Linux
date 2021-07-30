@@ -183,6 +183,12 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 		return;
 	}
 
+	if(!fillter.CheckPacketHeader(recvBuffer, client.remotePort)){
+		log.Debug(`[${process.argv[2]}][Client Packet Error] remote[${client.remotePort}][${client.remoteAddress}], local[${client.localPort}][${client.localAddress}]`);
+		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+		return;
+	}
+
 	let hasSlicedBuffer = false;
 	let buffer;
 	let size = header.GetPacketSize(recvBuffer);
@@ -297,7 +303,7 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 		let msgId = header.GetMsgId(recvBuffer);
 		if(msgId == -1 || msgId == 0x41)
 		{
-			log.Debug(`[${process.argv[2]}]Disconnect Client [${clientPort}][${msgId}]`);
+			log.Debug(`[${process.argv[2]}]Ban Client [${clientPort}][${msgId}]`);
 			client.end();
 		}
 	}

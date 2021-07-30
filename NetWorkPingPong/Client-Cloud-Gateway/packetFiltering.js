@@ -18,11 +18,36 @@ exports.CheckMagicNumber = function(recvBuffer = new Buffer(), remotePort){
 	return true;
 }
 
+exports.CheckPacketHeader = function(recvBuffer = new Buffer(), remotePort){
+	let value = recvBuffer.readIntLE(16, 8); // session Id
+	if(value != 0)
+	{
+		console.log(`[Packet Error][${remotePort}] Session Id Not 0 : 0x${value.toString(16)}`);
+		return false;
+	}
+
+	value = recvBuffer.readIntLE(24, 2); // totalLength
+	if(value > 20000)
+	{
+		console.log(`[Packet Error][${remotePort}] total Length too long : ${value.toString()}`);
+		return false;
+	}
+
+	value = recvBuffer.readIntLE(Header_1st_Size + 2, 2); // Msg ID
+	if(value != 0)
+	{
+		console.log(`[Packet Error][${remotePort}] MsgID is 0 : 0x${value.toString(16)}`);
+		return false;
+	}
+
+	return true;
+}
+
 exports.InsertPortNum = function(recvBuffer = new Buffer, clientPort){
-	recvBuffer.writeInt16BE(clientPort ,Header_1st_Size + 20);
+	recvBuffer.writeInt16LE(clientPort ,Header_1st_Size + 20);
 }
 
 exports.GetPortNum = function(recvBuffer = new Buffer){
 	console.log('[PortNum] 0x' + recvBuffer.readInt16BE(Header_1st_Size + 20).toString(16) + "");
-	return recvBuffer.readInt16BE(Header_1st_Size + 20);
+	return recvBuffer.readInt16LE(Header_1st_Size + 20);
 }

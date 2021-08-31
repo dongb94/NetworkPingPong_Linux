@@ -41,8 +41,12 @@ let server = net_server.createServer(function(client) {
 	});
 
 	client.on('error', function(err) {
-		log.Error(`\n[${process.argv[2]}]\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
-		log.Error(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
+		log.Error(`[${process.argv[2]}]\n
+					\t[SOCKET ERROR] Client id : ${gateway.id}\n
+					\t>> msg >> ${JSON.stringify(err)}\n
+					name\t: ${err.name}\n
+					messageg\t: ${err.message}\n
+					stack\t: ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			client.end();
 		}
@@ -108,8 +112,12 @@ let gServer = gateway_server.createServer(function(gateway){
 	});
 
 	gateway.on('error', function(err) {
-		log.Error(`\n[${process.argv[2]}]\t[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
-		log.Error(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
+		log.Error(`[${process.argv[2]}]\n
+					\t[SOCKET ERROR] Gateway id : ${gateway.id}\n
+					\t>> msg >> ${JSON.stringify(err)}\n
+					name\t: ${err.name}\n
+					messageg\t: ${err.message}\n
+					stack\t: ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			gateway.end();
 		}

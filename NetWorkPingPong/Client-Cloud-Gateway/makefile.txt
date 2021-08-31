@@ -11,7 +11,7 @@ start :
 	make 9.open
 
 %.open : nodeJsRepeater.js
-	node nodeJsRepeater.js 400$* 405$* &
+	nohup node nodeJsRepeater.js 400$* 405$* &
 
 %.js :
 	cp test.js $@
@@ -30,4 +30,4 @@ removeServer :
 	rm nodeJsRepeater.js
 
 test : nodeJsRepeater.js
-	node nodeJsRepeater.js 3000 3050 &
+	nohup node nodeJsRepeater.js 3000 3050 &

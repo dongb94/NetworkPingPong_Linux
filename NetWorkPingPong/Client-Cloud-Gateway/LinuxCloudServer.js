@@ -41,8 +41,8 @@ let server = net_server.createServer(function(client) {
 	});
 
 	client.on('error', function(err) {
-		log.Debug(`\n[${process.argv[2]}]\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
-		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
+		log.Error(`\n[${process.argv[2]}]\t[SOCKET ERROR] Client id: `+ client.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Error(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			client.end();
 		}
@@ -108,8 +108,8 @@ let gServer = gateway_server.createServer(function(gateway){
 	});
 
 	gateway.on('error', function(err) {
-		log.Debug(`\n[${process.argv[2]}]\t[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
-		log.Debug(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
+		log.Error(`\n[${process.argv[2]}]\t[SOCKET ERROR] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Error(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			gateway.end();
 		}
@@ -150,21 +150,23 @@ gServer.listen(process.argv[3], function() {
 
 function writeData(socket, data){
 
-	if(socket == NaN || socket == undefined){
-		log.Debug(`[${socket.localPort}][SOCKET ERROR] Send to undefined socket`);
-		return;
-	}
+	try {
+		if(socket == NaN || socket == undefined){
+			log.Debug(`[${socket.localPort}][SOCKET ERROR] Send to undefined socket`);
+			return;
+		}
+	
+		let success = socket.write(data);
+		if (!success){
+			log.Debug(`[${socket.localPort}][SOCKET ERROR] Send Fail : \n	>> msg >> `+data.toString('hex'));
+		}
+	} catch (error) {
+		log.Error(`[Send Fail][${socket.localPort}] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Error(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 
-	let success = socket.write(data);
-	// let success = socket.write(data, function(err) {
-	// 	log.Debug(`[${socket.localPort}][SOCKET ERROR][${socket.remotePort}] Send Fail`);
-	// 	if(socket.localPort < 3010)
-	// 		socket.end();
-	// });
-
-	if (!success){
-		log.Debug(`[${socket.localPort}][SOCKET ERROR] Send Fail : \n	>> msg >> `+data.toString('hex'));
+		return -1;
 	}
+	
 }
 
 function checkAndRecvClientMsg(client, recvBuffer) {
@@ -310,3 +312,17 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 
 	if(hasSlicedBuffer) checkAndSendServerMsg(gateway, tempBuffer);
 }
+
+process.on('uncaughtException', function(err) {
+	log.Error(`<<UncaughtException>>${err}`);
+
+	if(err.code == `ECONNREFUSED` || err.code == `EHOSTUNREACH`)
+	{
+		log.Error(`대상에서 연결을 거부 했거나 연결이 구성되지 않았습니다.`);
+	}
+
+	if(err.code == `ETIMEDOUT`)
+	{
+		log.Error(`연결시간이 초과되었습니다.`);
+	}
+});

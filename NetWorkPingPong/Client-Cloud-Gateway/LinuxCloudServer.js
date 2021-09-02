@@ -321,16 +321,25 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 	if(hasSlicedBuffer) checkAndSendServerMsg(gateway, tempBuffer);
 }
 
+process.on('unhandledRejection', error => {
+	throw error;
+})
+
 process.on('uncaughtException', function(err) {
-	log.Error(`<<UncaughtException>>${err}`);
+	log.Error(`<<UncaughtException>>${err}\n${err.stack}`);
 
-	if(err.code == `ECONNREFUSED` || err.code == `EHOSTUNREACH`)
-	{
-		log.Error(`대상에서 연결을 거부 했거나 연결이 구성되지 않았습니다.`);
-	}
+	// if(err.code == `ECONNREFUSED` || err.code == `EHOSTUNREACH`)
+	// {
+	// 	log.Error(`대상에서 연결을 거부 했거나 연결이 구성되지 않았습니다.`);
+	// }
 
-	if(err.code == `ETIMEDOUT`)
-	{
-		log.Error(`연결시간이 초과되었습니다.`);
-	}
+	// if(err.code == `ETIMEDOUT`)
+	// {
+	// 	log.Error(`연결시간이 초과되었습니다.`);
+	// }
+
+	// if(!isOperationalError(error)){
+	// 	log.Error(`<<Operational Error>> Process Exit`);
+	// 	process.exit(1);
+	// }
 });

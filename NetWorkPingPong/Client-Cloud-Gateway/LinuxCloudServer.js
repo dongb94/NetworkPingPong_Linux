@@ -41,12 +41,13 @@ let server = net_server.createServer(function(client) {
 	});
 
 	client.on('error', function(err) {
-		log.Error(`[${process.argv[2]}]\n
-					\t[SOCKET ERROR] Client id : ${gateway.id}\n
-					\t>> msg >> ${JSON.stringify(err)}\n
-					name\t: ${err.name}\n
-					messageg\t: ${err.message}\n
-					stack\t: ${err.stack}`);
+		log.Error(`
+			[${process.argv[2]}][SOCKET ERROR] Client id : ${client.id} ${client.remotePort}
+			>> msg >> ${JSON.stringify(err)}
+			name\t: ${err.name}
+			messageg: ${err.message}
+			stack\t: ${err.stack}`);
+		
 		if(err.message == 'read ETIMEDOUT') {
 			client.end();
 		}
@@ -91,6 +92,11 @@ server.listen(process.argv[2], function() {
 
 let gServer = gateway_server.createServer(function(gateway){
 
+	if(gateway == undefined)
+	{
+		return;
+	}
+
 	gateway.id = gatewayIndex++;
 
 //	log.Debug('Gateway connection: ' + gateway.localAddress  + ":" + gateway.remotePort);
@@ -112,12 +118,12 @@ let gServer = gateway_server.createServer(function(gateway){
 	});
 
 	gateway.on('error', function(err) {
-		log.Error(`[${process.argv[2]}]\n
-					\t[SOCKET ERROR] Gateway id : ${gateway.id}\n
-					\t>> msg >> ${JSON.stringify(err)}\n
-					name\t: ${err.name}\n
-					messageg\t: ${err.message}\n
-					stack\t: ${err.stack}`);
+		log.Error(`
+			[${process.argv[2]}][SOCKET ERROR] Gateway id : ${gateway.id}
+			>> msg >> ${JSON.stringify(err)}
+			name\t: ${err.name}
+			messageg\t: ${err.message}
+			stack\t: ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			gateway.end();
 		}
@@ -242,7 +248,7 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 }
 
 function checkAndSendServerMsg(gateway, recvBuffer) {
-	
+
 	let clientPort;
 
 	if(tempBuffers[gateway.id] != null) {

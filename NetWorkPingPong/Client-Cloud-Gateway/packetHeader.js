@@ -12,8 +12,8 @@ exports.CreateHeader = function(buffer, msgId){
 
     //1st header
     let offset = MAGIC_NUMBER.copy(header, 0, 0, 8);                    // magic number		offset = 8
-    offset = header.writeUIntLE(0x00, offset, 8);						// time				offset = 16
-    offset = header.writeUIntLE(0x00, offset, 8);						// sessid			offset = 24
+    offset = header.writeBigUInt64LE(0x00, offset);						// time				offset = 16
+    offset = header.writeBigUInt64LE(0x00, offset);						// sessid			offset = 24
     offset = header.writeUInt16LE(HeaderSize + buffer.length, offset);	// size				offset = 26
     offset = header.writeUInt8(0x00, offset);							// enc flag			offset = 27
     offset = header.writeUInt8(0x00, offset);							// enc type			offset = 28
@@ -42,8 +42,8 @@ exports.CreateDisconnectHeader = function(){
 
     //1st header
     let offset = MAGIC_NUMBER.copy(header, 0, 0, 8);	// magic number        offset = 8
-    offset = header.writeUIntLE(0x00, offset, 8);		// time                offset = 16
-    offset = header.writeUIntLE(0x00, offset, 8);		// sessid              offset = 24
+    offset = header.writeBigUInt64LE(0x00, offset);		// time                offset = 16
+    offset = header.writeBigUInt64LE(0x00, offset);		// sessid              offset = 24
     offset = header.writeUInt16LE(HeaderSize, offset);	// size                offset = 26
     offset = header.writeUInt8(0x00, offset);			// enc flag            offset = 27
     offset = header.writeUInt8(0x00, offset);			// enc type            offset = 28

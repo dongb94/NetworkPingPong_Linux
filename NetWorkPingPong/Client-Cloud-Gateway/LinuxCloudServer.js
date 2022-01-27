@@ -42,11 +42,11 @@ let server = net_server.createServer(function(client) {
 
 	client.on('error', function(err) {
 		log.Error(`
-			[${process.argv[2]}][SOCKET ERROR] Client id : ${client.id} ${client.remotePort}
-			>> msg >> ${JSON.stringify(err)}
-			name\t: ${err.name}
-			messageg: ${err.message}
-			stack\t: ${err.stack}`);
+	[${process.argv[2]}][SOCKET ERROR] Client id : ${client.id} ${client.remotePort}
+	>> msg >> ${JSON.stringify(err)}
+	name\t: ${err.name}
+	messageg: ${err.message}
+	stack\t: ${err.stack}`);
 		
 		if(err.message == 'read ETIMEDOUT') {
 			client.end();
@@ -119,11 +119,11 @@ let gServer = gateway_server.createServer(function(gateway){
 
 	gateway.on('error', function(err) {
 		log.Error(`
-			[${process.argv[2]}][SOCKET ERROR] Gateway id : ${gateway.id}
-			>> msg >> ${JSON.stringify(err)}
-			name\t: ${err.name}
-			messageg\t: ${err.message}
-			stack\t: ${err.stack}`);
+	[${process.argv[2]}][SOCKET ERROR] Gateway id : ${gateway.id}
+	>> msg >> ${JSON.stringify(err)}
+	name\t: ${err.name}
+	messageg\t: ${err.message}
+	stack\t: ${err.stack}`);
 		if(err.message == 'read ETIMEDOUT') {
 			gateway.end();
 		}
@@ -173,6 +173,8 @@ function writeData(socket, data){
 		let success = socket.write(data);
 		if (!success){
 			log.Debug(`[${socket.localPort}][SOCKET ERROR] Send Fail : \n	>> msg >> `+data.toString('hex'));
+			socket.end();
+			socket.close();
 		}
 	} catch (error) {
 		log.Error(`[Send Fail][${socket.localPort}] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
@@ -185,7 +187,7 @@ function writeData(socket, data){
 
 function checkAndRecvClientMsg(client, recvBuffer) {
 	
-	// log.Debug(`[Client] rport : ${client.remotePort} // data.length : ` + recvBuffer.length);
+	// log.Debug(`[Client][${process.argv[2]}] rport : ${client.remotePort} // data.length : ` + recvBuffer.length);
 	// log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 	if(tempBuffers[client]!=null)
 	{
@@ -194,8 +196,8 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 	}
 
 	if(!fillter.CheckMagicNumber(recvBuffer, client.remotePort)){
-		log.Debug(`[${process.argv[2]}][Client MagicNumber Error] remote[${client.remotePort}][${client.remoteAddress}], local[${client.localPort}][${client.localAddress}]`);
-		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+		// log.Debug(`[${process.argv[2]}][Client MagicNumber Error] remote[${client.remotePort}][${client.remoteAddress}], local[${client.localPort}][${client.localAddress}]`);
+		// log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 		return;
 	}
 
@@ -210,8 +212,8 @@ function checkAndRecvClientMsg(client, recvBuffer) {
 	let size = header.GetPacketSize(recvBuffer);
 	if(size > recvBuffer.length)
 	{
-		log.Debug(`[${process.argv[2]}][Client recv buffer size is short] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
-		log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
+		// log.Debug(`[${process.argv[2]}][Client recv buffer size is short] Size[${size}] recvBufferLength[${recvBuffer.length}]`);
+		// log.Debug(`[C] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[client] = recvBuffer;
 		return;
 	}
@@ -278,8 +280,8 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 
 	// 헤더 사이즈 보다 받은 데이터가 작은 경우
 	if(recvBuffer.length < header.HeaderSize) {
-		log.Debug(`[${process.argv[2]}][S][Shorter than Header packet] [target ${clientPort}] [len : ${recvBuffer.length}]`);
-		log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
+		// log.Debug(`[${process.argv[2]}][S][Shorter than Header packet] [target ${clientPort}] [len : ${recvBuffer.length}]`);
+		// log.Debug(`[S] : ${recvBuffer.toString('hex')}`);
 		tempBuffers[gateway.id] = recvBuffer;
 		tempPorts[gateway.id] = clientPort;
 		return;
@@ -317,10 +319,11 @@ function checkAndSendServerMsg(gateway, recvBuffer) {
 		writeData(client, recvBuffer);
 
 		let msgId = header.GetMsgId(recvBuffer);
-		if(msgId == -1 || msgId == 0x41)
+		if(msgId == -1 || msgId == 0x41 || msgId == 0x22)
 		{
 			log.Debug(`[${process.argv[2]}]Ban Client [${clientPort}][${msgId}]`);
 			client.end();
+			client.close();
 		}
 	}
 

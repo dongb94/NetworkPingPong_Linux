@@ -54,7 +54,7 @@ exports.CreateDisconnectHeader = function(){
 
     //2nd header
     offset = header.writeUInt16LE(0x00, offset);	// Svc ID           offset = 34
-    offset = header.writeUInt16LE(0x21, offset);	// Msg ID           offset = 36
+    offset = header.writeUInt16LE(0x42, offset);	// Msg ID           offset = 36
     offset = header.writeUInt16LE(0x00, offset);	// Serial           offset = 38
     offset = header.writeUInt16LE(0x00, offset);	// Result           offset = 40
     offset = header.writeUInt32LE(0x00, offset);	// CRC              offset = 44

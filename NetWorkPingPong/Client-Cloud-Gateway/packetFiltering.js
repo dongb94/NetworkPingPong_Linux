@@ -10,7 +10,7 @@ exports.CheckMagicNumber = function(recvBuffer = new Buffer(), remotePort){
 	}
 
 	if(MAGIC_NUMBER.compare(recvBuffer, 0, 8) != 0 ){
-		let packet = recvBuffer.readIntLE(0,8);
+		let packet = recvBuffer.readBigInt64LE(0);
 		console.log(`[Packet Error][${remotePort}] Magic Number does not match : ` + packet.toString(16));
 		return false;
 	}
@@ -19,7 +19,7 @@ exports.CheckMagicNumber = function(recvBuffer = new Buffer(), remotePort){
 }
 
 exports.CheckPacketHeader = function(recvBuffer = new Buffer(), remotePort){
-	let value = recvBuffer.readIntLE(16, 8); // session Id
+	let value = recvBuffer.readBigInt64LE(16); // session Id
 	if(value != 0)
 	{
 		console.log(`[Packet Error][${remotePort}] Session Id Not 0 : 0x${value.toString(16)}`);

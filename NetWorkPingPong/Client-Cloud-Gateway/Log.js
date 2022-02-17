@@ -7,7 +7,13 @@ exports.Debug = function(string){
 }
 
 exports.Error = function(string){
-	var path = `./LOG/${process.argv[2]}.err`; 
+	var dir = `./LOG`	
+	var path = `./LOG/${process.argv[2]}.err`;
+
+	if (!fs.existsSync(dir)){
+		fs.mkdirSync(dir);
+	}
+
 	fs.open(path, 'a', function(err, fd)
 	{
 		if(err) {

@@ -16,12 +16,12 @@ start :
 close :
 	pkill -9 -ef node
 
-reset :
+restart :
 	make close
 	make start
 
-removeServer :
-	rm LinuxCloudServer.js
-
 test : LinuxCloudServer.js
 	node LinuxCloudServer.js 3000 3050 &
+
+log :
+	view nohup.out

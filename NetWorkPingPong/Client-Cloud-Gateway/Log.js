@@ -1,4 +1,6 @@
 var fs = require('fs');
+var express = require('express');
+var exec = require("child_process").exec;
 
 const { timeStamp } = require("console");
 
@@ -12,6 +14,11 @@ exports.Error = function(string){
 
 	if (!fs.existsSync(dir)){
 		fs.mkdirSync(dir);
+		exec("sudo chmod 777 ./LOG", function(err, stdout, stderr){
+
+			console.log(stdout);
+			console.log(stderr);
+		});
 	}
 
 	fs.open(path, 'a', function(err, fd)

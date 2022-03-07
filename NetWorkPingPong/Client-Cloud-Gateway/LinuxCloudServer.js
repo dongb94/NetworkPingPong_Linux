@@ -177,7 +177,7 @@ function writeData(socket, data){
 			socket.close();
 		}
 	} catch (error) {
-		log.Error(`[Send Fail][${socket.localPort}] Gateway id : `+ gateway.id + "\n   >> msg >> "+ JSON.stringify(err));
+		log.Error(`[Send Fail][${socket.localPort}] socket id : `+ socket.id + "\n   >> msg >> "+ JSON.stringify(err));
 		log.Error(`name : ${err.name}\nmessageg : ${err.message}\nstack : ${err.stack}`);
 
 		return -1;

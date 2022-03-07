@@ -14,7 +14,7 @@ exports.Error = function(string){
 
 	if (!fs.existsSync(dir)){
 		fs.mkdirSync(dir);
-		exec("sudo chmod 777 ./LOG", function(err, stdout, stderr){
+		exec("sudo chmod 777 ./LOG", function(err, stdout, stderr){ // 읽기, 쓰기 권한 필요
 
 			console.log(stdout);
 			console.log(stderr);

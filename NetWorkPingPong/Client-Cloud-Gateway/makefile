@@ -25,3 +25,4 @@ test : LinuxCloudServer.js
 
 log :
 	view nohup.out
+
